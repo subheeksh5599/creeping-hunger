@@ -20,6 +20,8 @@ function latestSteps(events: ReviewEvent[]) {
   return [...byId.values()]
 }
 
+const TOOL_STEPS: Partial<Record<StepEvent["id"], string>> = { policy: "Otari /search + /fetch", compute: "Otari /code/execute" }
+
 function fallbackUsed(s: StepEvent) {
   return s.otari?.["otari-fallback"] === "true" || s.otari?.client_fallback === true
 }
@@ -114,7 +116,7 @@ export function ReviewDetail({ id }: { id: string }) {
               {steps.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell><div className="font-medium">{s.id}</div><div className="max-w-80 truncate text-muted-foreground">{s.title}</div></TableCell>
-                  <TableCell className="font-mono text-xs">{s.otari?.["otari-model"] ?? s.model ?? s.via ?? "none"}</TableCell>
+                  <TableCell className="font-mono text-xs">{s.otari?.["otari-model"] ?? s.model ?? s.via ?? TOOL_STEPS[s.id] ?? "none"}</TableCell>
                   <TableCell><Badge variant={s.status === "error" ? "destructive" : "secondary"}>{s.status}</Badge></TableCell>
                   <TableCell>{fallbackUsed(s) ? <Badge variant="outline">yes</Badge> : "no"}</TableCell>
                   <TableCell className="text-right tabular-nums">{usd(s.cost_usd)}</TableCell>
