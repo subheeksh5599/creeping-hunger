@@ -27,6 +27,7 @@ class ReviewIn(BaseModel):
     page_html: str | None = None
     install_id: str = "anon"
     force_fallback: bool = False
+    fresh: bool = False
 
 
 def sse(gen):
@@ -41,12 +42,12 @@ def sse(gen):
 async def review(body: ReviewIn):
     page_text = body.page_text[:60000] if body.page_text else None
     page_html = body.page_html[:400000] if body.page_html else None
-    return sse(Review(body.url, page_text, page_html, body.install_id, body.force_fallback).run())
+    return sse(Review(body.url, page_text, page_html, body.install_id, body.force_fallback, body.fresh).run())
 
 
 @app.get("/api/review")
-async def review_get(url: str, install_id: str = "anon", force_fallback: bool = False):
-    return sse(Review(url, None, None, install_id, force_fallback).run())
+async def review_get(url: str, install_id: str = "anon", force_fallback: bool = False, fresh: bool = False):
+    return sse(Review(url, None, None, install_id, force_fallback, fresh).run())
 
 
 @app.get("/api/reviews")

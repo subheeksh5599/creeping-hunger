@@ -92,8 +92,9 @@ def _degraded(step: str, e: OtariError) -> str:
 
 class Review:
     def __init__(self, url: str, page_text: str | None, page_html: str | None, install_id: str,
-                 force_fallback: bool = False):
+                 force_fallback: bool = False, fresh: bool = False):
         self.url, self.page_text, self.page_html = url, page_text, page_html
+        self.fresh = fresh
         self.install_id = (install_id or "anon")[:64]
         self.force_fallback = force_fallback
         self.review_id = f"ch-{uuid.uuid4().hex[:12]}"
@@ -141,6 +142,11 @@ class Review:
 
     # ---- pipeline ------------------------------------------------------------
     async def run(self) -> AsyncIterator[dict]:
+        cached = None if self.force_fallback or self.fresh else store.latest_for(self.url)
+        if cached:
+            async for e in self._replay(cached):
+                yield e
+            return
         events: list[dict] = []
         try:
             async for e in self._run():
@@ -148,7 +154,8 @@ class Review:
                     events.append(e)
                 yield e
         except OtariError as e:
-            events.append(ev("error", code=e.code, status=e.status, message=e.friendly, otari=e.meta))
+            budget = await self.o.end_user_budget() if _fatal(e) else None
+            events.append(ev("error", code=e.code, status=e.status, message=e.friendly, otari=e.meta, budget=budget))
             yield events[-1]
         except Exception as e:  # noqa: BLE001
             events.append(ev("error", code="internal", message=f"{type(e).__name__}: {str(e)[:300]}"))
@@ -156,7 +163,22 @@ class Review:
         finally:
             await self.o.aclose()
             await self.local_http.aclose()
-            store.save(self.review_id, self.install_id, self.url, events)
+            store.save(self.review_id, self.install_id, self.url, events, self.force_fallback)
+
+    async def _replay(self, saved: dict) -> AsyncIterator[dict]:
+        t0 = time.time()
+        summary = saved["summary"]
+        budget = await self.o.end_user_budget()
+        await self.o.aclose()
+        await self.local_http.aclose()
+        for e in saved["events"]:
+            if e["type"] == "start":
+                yield {**e, "cached_from": summary["id"], "cached_at": summary["created_at"]}
+            elif e["type"] == "done":
+                yield {**e, "cached": True, "original_seconds": e.get("seconds"),
+                       "seconds": round(time.time() - t0, 2), "budget": budget}
+            else:
+                yield e
 
     async def _run(self) -> AsyncIterator[dict]:
         t0 = time.time()
@@ -342,7 +364,8 @@ class Review:
             yield e
         yield ev("done", review_id=self.review_id, total_cost_usd=round(self.total_cost, 6),
                  seconds=round(time.time() - t0, 1), notes=list(dict.fromkeys(self.o.notes)),
-                 end_user=self.o.end_user, end_user_accepted=self.o.send_end_user)
+                 end_user=self.o.end_user, end_user_accepted=self.o.send_end_user,
+                 budget=await self.o.end_user_budget())
 
     async def _tool_availability(self) -> dict:
         try:
@@ -505,11 +528,14 @@ class Review:
                     elif "usage" in part:
                         usage = part["usage"]
                 verdict = parse_verdict(buf)
-                yield self.step("judge", "done", "Verdict written", model=meta.get("otari-model", model),
+                judge = {"model": meta.get("otari-model", model), "provider": meta.get("otari-provider"),
+                         "fallback_used": (i > 0) or meta.get("otari-fallback") == "true",
+                         "attempts": attempts if not JUDGE_POLICY else meta.get("otari-attempt-count"),
+                         "policy": JUDGE_POLICY or None, "forced": self.force_fallback}
+                yield self.step("judge", "done", "Verdict written", model=judge["model"],
                                 otari=meta, cost_usd=cost_of(usage),
-                                fallback_used=(i > 0) or meta.get("otari-fallback") == "true",
-                                attempts=attempts if (not JUDGE_POLICY or i > 0) else meta.get("otari-attempt-count"))
-                yield ev("result", **verdict, brand=brand, product=product, policy_url=policy_url,
+                                fallback_used=judge["fallback_used"], attempts=judge["attempts"])
+                yield ev("result", **verdict, judge=judge, brand=brand, product=product, policy_url=policy_url,
                          extraction=extraction, research=research, stats=stats, blocked=blocked)
                 return
             except OtariError as e:
@@ -542,8 +568,22 @@ def parse_verdict(text: str) -> dict:
         score = max(1, min(5, int(re.search(r"\d", grab("SCORE") or "3").group(0))))
     except (AttributeError, ValueError):
         score = 3
+    body = body.strip() or text.strip()
+    verdict_md, tips = split_tips(body)
     return {"score": score, "label": grab("LABEL") or LABELS[score], "headline": grab("HEADLINE"),
-            "warning_label": grab("WARNING").lower().startswith("y"), "verdict_md": body.strip() or text.strip()}
+            "warning_label": grab("WARNING").lower().startswith("y"), "verdict_md": verdict_md, "tips": tips}
+
+
+TIPS_HEADING = re.compile(r"(?im)^[\s#*_]*tips to protect yourself[\s*_]*:?[\s*_]*$")
+
+
+def split_tips(body: str) -> tuple[str, list[str]]:
+    m = TIPS_HEADING.search(body)
+    if not m:
+        return body, []
+    tips = [re.sub(r"^\s*(?:[-*•]|\d+[.)])\s+", "", line).strip().replace("**", "")
+            for line in body[m.end():].splitlines() if re.match(r"^\s*(?:[-*•]|\d+[.)])\s+", line)]
+    return body[:m.start()].rstrip(), tips
 
 
 COMPUTE_SCRIPT = r'''

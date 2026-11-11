@@ -77,7 +77,8 @@ class ResearchDegradedTest(unittest.TestCase):
         with patch("pipeline.guard.validate", new=AsyncMock(return_value={
             "valid": True, "cost_usd": 0, "explanation": "", "score": 0,
         })):
-            with patch("pipeline.store.save"):
+            with patch("pipeline.store.save"), patch("pipeline.store.latest_for", return_value=None), \
+                    patch.object(review.o, "end_user_budget", new=AsyncMock(return_value=None)):
                 async for e in review.run():
                     events.append(e)
         return events

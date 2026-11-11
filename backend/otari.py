@@ -28,7 +28,7 @@ class OtariError(Exception):
     @property
     def friendly(self) -> str:
         if self.code == "budget_exceeded":
-            return "You've used today's free reviews. Come back tomorrow (your per-install budget resets daily)."
+            return "You've used up this browser's free review budget. It resets at the start of the next budget period."
         if self.code == "user_blocked":
             return "This install has been blocked from making reviews."
         if self.code == "guardrail_violation":
@@ -211,6 +211,23 @@ class Otari:
 
     async def fetch(self, url: str) -> tuple[dict, dict]:
         return await self._post("/fetch", {"url": url})
+
+    async def end_user_budget(self) -> dict | None:
+        """Spend so far for this end user, from GET /end-users. The limit is not readable with an API key."""
+        if not (self.end_user and self.send_end_user):
+            return None
+        try:
+            rows = await self.get(f"/end-users?external_id={self.end_user}")
+        except (OtariError, ValueError):
+            return None
+        row = rows[0] if isinstance(rows, list) and rows else None
+        if not row:
+            return None
+        limit = float(os.getenv("END_USER_BUDGET_USD", "0.05"))
+        spend = float(row.get("spend") or 0)
+        return {"spend_usd": round(spend, 6), "limit_usd": limit, "remaining_usd": round(max(0.0, limit - spend), 6),
+                "resets_at": row.get("next_budget_reset_at"), "blocked": bool(row.get("blocked")),
+                "requests": row.get("current_requests")}
 
     async def code_execute(self, code: str, timeout_seconds: int = 30) -> tuple[dict, dict]:
         return await self._post("/code/execute", {"code": code, "timeout_seconds": timeout_seconds})
