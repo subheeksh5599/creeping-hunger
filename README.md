@@ -28,8 +28,9 @@ product page  →  find the privacy policy  →  block prompt injection  →  ex
 
 ## Demo
 
-<!-- demo video: add the 3 to 5 minute recording link here -->
-_Recording in progress._
+**[Watch the demo video](https://youtu.be/hSPqzFOKVBc)**
+
+[![Creeping Hunger demo](https://img.youtube.com/vi/hSPqzFOKVBc/maxresdefault.jpg)](https://youtu.be/hSPqzFOKVBc)
 
 ## Live status
 
@@ -167,7 +168,7 @@ All five are open-weight, from four labs.
 | First commit where Otari came in | [`b04e3c8`](https://github.com/subheeksh5599/creeping-hunger/commit/b04e3c846fee356dac20fa26ce85a599d32be8fe) "MCP research server, Otari client, self-hosted prompt-injection guardrail". The project was built on Otari from its first commit. |
 | Otari features used | open-weight models, routing and fallback, multiple models, MCP, web search and fetch, code execution, guardrails, budgets and per-user budgets. Mapping above |
 | Issues for the Otari repo | drafts in [`docs/otari-issues/`](docs/otari-issues/): the `user` field error, search provider setup, hidden search/fetch charges against per-user budgets |
-| Demo video | to be added |
+| Demo video | [youtu.be/hSPqzFOKVBc](https://youtu.be/hSPqzFOKVBc) |
 | Written feedback | [`FEEDBACK.md`](FEEDBACK.md) |
 | Live app | https://creeping-hunger.onrender.com |
 
