@@ -161,7 +161,7 @@ All five are open-weight, from four labs.
 | Field | Value |
 |---|---|
 | Project | Creeping Hunger |
-| One line | A Firefox sidebar that brings back Mozilla's *Privacy Not Included* as a 1 to 5 creep score for any product page, on open-weight models through Otari. |
+| One line | A Firefox sidebar that writes a *Privacy Not Included*-style review, with a 1 to 5 creep score, for any product page, on open-weight models through Otari. |
 | Repository | https://github.com/subheeksh5599/creeping-hunger |
 | Hackathon branch | [`otari-hackathon`](https://github.com/subheeksh5599/creeping-hunger/tree/otari-hackathon) |
 | First commit where Otari came in | [`b04e3c8`](https://github.com/subheeksh5599/creeping-hunger/commit/b04e3c846fee356dac20fa26ce85a599d32be8fe) "MCP research server, Otari client, self-hosted prompt-injection guardrail". The project was built on Otari from its first commit. |

@@ -4,6 +4,9 @@ Researched 11 Nov 2026 for the Mozilla Otari Hackathon, Devs Wilding. Deadline i
 
 ## Where we stand
 
+> This is the plan written at the start of the day. Since then the README, FEEDBACK.md, landing page, shadcn dashboard, Render deploy, screenshots, cache, quote highlighting, tips block, compare view and time-spent line have shipped; see the README's live status table. Still open: the demo video, making the repo public, filing the Otari issues, and the submission reply.
+
+
 The backend pipeline, MCP server, Firefox sidebar, hostile test page, and sample event logs already exist under `/workspace/creeping-hunger`. The planned path is real: find a product's privacy policy, extract practices with an open-weight model behind a prompt-injection guardrail, research with Otari web search plus our MCP tools, run readability and an archive diff in Otari code execution, then judge with a routed model and a fallback. That is more machinery than almost every shipped "paste a policy, get a score" extension.
 
 We have not finished the product surfaces that make a submission look done. There is no README, no FEEDBACK.md, no landing page, and no dashboard. `web/index.html` is a fallback reviewer, not a homepage. The repo is still meant to stay private until the product works. Store listing is out of reach today. We have sample logs for Fitbit Charge 6 and the hostile page, but no written check of those claims against the live policy. Competitors who "finished" did it by shipping a one-click path, a documented install, a public repo or store listing, and a video of the live product. That is the gap this list is for.

@@ -590,7 +590,7 @@ class Review:
         title = "Writing the verdict"
         yield self.step("judge", "running", title, model=chain[0])
         system = (
-            "You are the voice of Mozilla's *Privacy Not Included* guide format, revived by Creeping Hunger: witty, warm, "
+            "You write in the voice of Mozilla's *Privacy Not Included* guide format, for Creeping Hunger: witty, warm, "
             "a little snarky, never mean to the reader, ruthless about data grabs, always factual. Never comment on URLs, hosting or how the evidence was gathered. Use only the "
             "evidence provided. Output EXACTLY this format:\n"
             "SCORE: <1-5 integer, 1=Not creepy, 5=Super creepy>\nLABEL: <Not creepy|A little creepy|Somewhat creepy|"
