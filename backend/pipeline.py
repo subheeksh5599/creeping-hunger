@@ -55,7 +55,7 @@ def html_to_text(html: str) -> str:
     html = re.sub(r"(?is)<(script|style|noscript|svg|template).*?</\1>", " ", html)
     html = re.sub(r"(?i)<br\s*/?>|</(p|div|li|h\d|tr)>", "\n", html)
     text = unescape(re.sub(r"(?s)<[^>]+>", " ", html))
-    text = re.sub(r"[ \t\r\f\v]+", " ", text)
+    text = re.sub(r" *\n *", "\n", re.sub(r"[ \t\r\f\v]+", " ", text))
     return re.sub(r"\n\s*\n+", "\n\n", text).strip()
 
 
@@ -106,6 +106,12 @@ def looks_like_policy(text: str) -> bool:
 
 def root_domain(host: str) -> str:
     return mcp_tools._root_domain(host)
+
+
+def same_site(url: str, domain: str, pinned: bool) -> bool:
+    """A search hit belongs to the brand. A demo page on a shared host (onrender.com, github.io) must match the exact host."""
+    hit = (urlparse(url).hostname or "").lower()
+    return hit == domain if pinned else root_domain(hit) == root_domain(domain)
 
 
 def ev(type_: str, **kw) -> dict:
@@ -283,8 +289,7 @@ class Review:
             try:
                 sj, search_meta = await self.o.search(f"{brand} privacy policy {brand_domain}", max_results=5)
                 found = [r.get("url", "") for r in sj.get("results", [])]
-                found = [u for u in found if "privacy" in u.lower()
-                         and root_domain(urlparse(u).hostname or "") == root_domain(brand_domain)]
+                found = [u for u in found if "privacy" in u.lower() and same_site(u, brand_domain, pinned=brand_domain == host)]
                 cands = [u for u in found if not foreign_locale(u)] + cands
             except OtariError as e:
                 if e.code == "web_access_disabled":
@@ -304,7 +309,11 @@ class Review:
             try:
                 # Each Otari /fetch costs about $0.01 of the per-user budget, so only the likeliest three use it.
                 t, _, via = await self.read_url(u, use_otari=len(seen) <= 3)
-            except (httpx.HTTPError, OtariError):
+            except OtariError as e:
+                if _fatal(e):
+                    raise
+                continue
+            except httpx.HTTPError:
                 continue
             if looks_like_policy(t):
                 policy_text, policy_url, policy_via = t, u, via
@@ -766,7 +775,7 @@ def parse_verdict(text: str) -> dict:
     head, _, body = text.partition("---")
     def grab(k):
         m = re.search(rf"(?im)^\s*\**{k}\**\s*:\s*(.+)$", head)
-        return m.group(1).strip().strip("*") if m else ""
+        return m.group(1).strip().strip("*").strip() if m else ""
     try:
         score = max(1, min(5, int(re.search(r"\d", grab("SCORE") or "3").group(0))))
     except (AttributeError, ValueError):
@@ -830,8 +839,11 @@ if old.strip():
 f = d.get("facts") or {}
 ret = f.get("retention", "").lower()
 units = {"day": 1, "week": 7, "month": 30, "year": 365}
-days = max([int(n) * units[u] for n, u in re.findall(r"(\d+)\s*(day|week|month|year)s?", ret)] or [0])
-forever = bool(re.search(r"as long as|indefinite|until you delete|no longer (needed|necessary)|cannot be deleted", ret))
+spelled = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+           "eleven": 11, "twelve": 12, "eighteen": 18, "twenty": 20, "thirty": 30, "sixty": 60, "ninety": 90}
+amounts = re.findall(r"\b(\d+|" + "|".join(spelled) + r")[\s-]*(day|week|month|year)s?\b", ret)
+days = max([int(spelled.get(n, n)) * units[u] for n, u in amounts] or [0])
+forever = bool(re.search(r"as long as|indefinite|permanent|forever|until you delete|no longer (needed|necessary)|cannot be deleted", ret))
 factors = [
  {"name": "Reading grade", "value": grade, "rule": "13 or higher", "point": int(grade >= 13)},
  {"name": "\"may\" count", "value": counts["may"], "rule": "25 or more", "point": int(counts["may"] >= 25)},
