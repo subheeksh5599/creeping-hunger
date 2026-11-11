@@ -2,14 +2,16 @@
 import json
 import sys
 
+import os
+
 import httpx
 
 url = sys.argv[1]
 out = next((a for a in sys.argv[2:] if a.endswith(".json")), None)
-backend = "http://127.0.0.1:8787"
+backend = os.getenv("CH_BACKEND", "http://127.0.0.1:8787").rstrip("/")  # e.g. https://creeping-hunger.onrender.com
 events = []
 with httpx.stream("POST", f"{backend}/api/review", timeout=600,
-                  json={"url": url, "install_id": "cli-test", "force_fallback": "--fallback" in sys.argv}) as r:
+                  json={"url": url, "install_id": os.getenv("CH_INSTALL_ID", "cli-test"), "force_fallback": "--fallback" in sys.argv}) as r:
     for line in r.iter_lines():
         if not line.startswith("data: "):
             continue

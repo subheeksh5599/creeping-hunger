@@ -24,7 +24,7 @@ export type StepEvent = {
   evidence?: string
   score?: number
   guard_mode?: "otari" | "local"
-  mcp_mode?: "otari_managed_mcp" | "local_fallback"
+  mcp_mode?: "otari_managed_mcp" | "otari_managed_mcp_stored" | "local_fallback" | "unavailable"
   tool_calls?: { type: string; status: string; name?: string; server?: string }[]
   data?: Record<string, unknown>
 }

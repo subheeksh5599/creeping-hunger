@@ -94,7 +94,7 @@ The backend URL is under Settings in the sidebar. Set it to your public URL when
 
 ### Public URL
 
-Otari calls the MCP server and the guardrail service from its own servers, so both need public HTTPS URLs. Without them the backend still works: it runs the same MCP tool functions and the same guardrail locally, and the UI labels those steps `local_fallback` and `guardrail via local`.
+Otari calls the MCP server and the guardrail service from its own servers, so both need public HTTPS URLs. New Otari workspaces refuse MCP servers named by URL in a request; add `https://creeping-hunger-mcp.onrender.com/mcp` under **Tools → MCP servers** with a name containing `creeping` and the backend finds it and sends it as `mcp_server_ids` (or set `MCP_SERVER_ID`). Without them the backend still works: it runs the same MCP tool functions and the same guardrail locally, and the UI labels those steps `local_fallback` and `guardrail via local`.
 
 `render.yaml` deploys both services to Render's free plan from this repo:
 
