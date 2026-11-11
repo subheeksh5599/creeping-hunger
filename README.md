@@ -4,6 +4,8 @@ Creeping Hunger is a Firefox sidebar that gives the product page you are on a 1 
 
 Built for the Mozilla.ai Otari hackathon, Devs Wilding, November 2026.
 
+**Live:** [creeping-hunger.onrender.com](https://creeping-hunger.onrender.com/) (landing) · [/try](https://creeping-hunger.onrender.com/try) (web reviewer) · [/#/dashboard](https://creeping-hunger.onrender.com/#/dashboard) · [/hostile/](https://creeping-hunger.onrender.com/hostile/) (prompt-injection test page) · MCP server at `https://creeping-hunger-mcp.onrender.com/mcp`. Free Render instances sleep, so the first request can take about a minute.
+
 > Not legal advice. Not a current Mozilla *Privacy Not Included* review. Archived PNI text can be out of date, and the score can be wrong.
 
 ## Why
@@ -76,6 +78,8 @@ Then open:
 - `http://127.0.0.1:8787/hostile/` for the test page with a planted prompt injection.
 
 For dashboard development, run `npm run dev` in `dashboard/`. Vite proxies `/api` to port 8787.
+
+The extension's Backend URL defaults to the public backend; type `http://127.0.0.1:8787` in the sidebar to use a local one (it's remembered). The dashboard and `/try` call their own origin; add `?api=http://127.0.0.1:8787` to point them elsewhere, and `?api=` to reset.
 
 From a terminal, `python scripts/review_cli.py <url> out.json [--fallback]` runs a review and saves the event stream. `samples/` has saved runs.
 

@@ -15,12 +15,16 @@
 <p class="small"><a href="/">About Creeping Hunger</a> · <a href="/#/dashboard">Dashboard</a></p>
 <script src="/ui/ui.js"></script>
 <script>
+  // API base: this page's own origin (the public backend). Override with ?api=http://127.0.0.1:8787
+  const qs = new URLSearchParams(location.search);
+  if (qs.has("api")) { const v = (qs.get("api") || "").trim().replace(/\/$/, ""); v ? localStorage.setItem("chApiBase", v) : localStorage.removeItem("chApiBase"); }
+  const API = localStorage.getItem("chApiBase") || location.origin;
   let id = localStorage.getItem("chInstall"); if (!id) { id = crypto.randomUUID(); localStorage.setItem("chInstall", id); }
   document.querySelectorAll("[data-u]").forEach(a => a.onclick = (e) => { e.preventDefault();
     document.getElementById("url").value = a.dataset.u === "hostile" ? location.origin + "/hostile/" : a.dataset.u; });
-  document.getElementById("go").onclick = () => CH.run({ backend: location.origin, url: document.getElementById("url").value.trim(),
+  document.getElementById("go").onclick = () => CH.run({ backend: API, url: document.getElementById("url").value.trim(),
     install_id: id, force_fallback: document.getElementById("fallback").checked,
     root: document.getElementById("app"), button: document.getElementById("go") });
   const replayId = new URLSearchParams(location.search).get("review");
-  if (replayId) fetch(`/api/reviews/${replayId}`).then(r => r.json()).then(d => CH.replay(d.events, document.getElementById("app")));
+  if (replayId) fetch(`${API}/api/reviews/${replayId}`).then(r => r.json()).then(d => CH.replay(d.events, document.getElementById("app")));
 </script></body></html>

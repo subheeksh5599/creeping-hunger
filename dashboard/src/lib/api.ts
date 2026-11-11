@@ -111,8 +111,23 @@ export type ReviewSummary = {
 
 export type Budget = { available: true; end_user: Record<string, unknown> | null } | { available: false; reason: string }
 
+// Where the API lives. The dashboard is normally served by the backend itself
+// (https://creeping-hunger.onrender.com), so same-origin is the default.
+// Override with ?api=http://127.0.0.1:8787 (remembered in localStorage; ?api= with
+// no value clears it) or VITE_API_BASE at build time.
+function resolveApiBase(): string {
+  const q = new URLSearchParams(location.search)
+  if (q.has("api")) {
+    const v = (q.get("api") ?? "").trim().replace(/\/$/, "")
+    if (v) localStorage.setItem("chApiBase", v)
+    else localStorage.removeItem("chApiBase")
+  }
+  return (localStorage.getItem("chApiBase") ?? import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "")
+}
+export const API_BASE = resolveApiBase()
+
 async function getJson<T>(path: string): Promise<T> {
-  const r = await fetch(path)
+  const r = await fetch(API_BASE + path)
   if (!r.ok) throw new Error(`${path} answered ${r.status}`)
   return r.json() as Promise<T>
 }
@@ -122,7 +137,7 @@ export const getReview = (id: string) => getJson<{ summary: ReviewSummary; event
 export const getBudget = (installId: string) => getJson<Budget>(`/api/budget/${encodeURIComponent(installId)}`)
 
 export async function runReview(url: string, onEvent: (e: ReviewEvent) => void): Promise<void> {
-  const resp = await fetch("/api/review", {
+  const resp = await fetch(API_BASE + "/api/review", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url, install_id: "dashboard" }),
