@@ -13,6 +13,8 @@ services:
         sync: false
       - key: JUDGE_POLICY
         sync: false
+      - key: END_USER_BUDGET_USD
+        value: "1.00"
   - type: web
     name: creeping-hunger-mcp
     runtime: docker

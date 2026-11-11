@@ -224,7 +224,7 @@ class Otari:
         if not isinstance(rows, list):
             return None
         row = rows[0] if rows else {}
-        limit = float(os.getenv("END_USER_BUDGET_USD", "0.05"))
+        limit = float(os.getenv("END_USER_BUDGET_USD", "1.00"))
         spend = float(row.get("spend") or 0)
         return {"spend_usd": round(spend, 6), "limit_usd": limit, "remaining_usd": round(max(0.0, limit - spend), 6),
                 "resets_at": row.get("next_budget_reset_at"), "blocked": bool(row.get("blocked")),

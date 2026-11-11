@@ -41,7 +41,7 @@ _Recording in progress._
 | Full review of the Fitbit Charge 6 page | **Run** | review `ch-7fff6a158060` in [`samples/reviews/`](samples/reviews/): 5/5, warning label, 3 of 4 red-flag quotes found word for word in the policy, 64 s, Otari billed $0.0408 |
 | Hostile test page | **Blocked** | [`/hostile/`](https://creeping-hunger.onrender.com/hostile/) hides instructions for AI reviewers. On the public backend, review `ch-527acf7510f2` reported `guardrail via otari`, skipped the extractor and scored 5. Saved runs `ch-728089355926` and `ch-462ff6e5534b` show the same |
 | Judge fallback | **Shown on demand** | the "force judge fallback" switch puts a model that does not exist in front of the routing policy. Review `ch-527acf7510f2` on the public backend: first attempt 424, then the routing policy answered with Llama 3.3 70B, and the sidebar says "fallback model answered", 2 attempts |
-| Per-user budget | **On** | each browser install is an Otari end user. The sidebar shows "$0.0408 of $0.05 used, resets Dec 1", read live from Otari |
+| Per-user budget | **On** | each browser install is an Otari end user. The default end-user budget is $1.00 a day. The sidebar shows spend against it and the reset time, read live from Otari (for example "$0.0408 of $1.00 used") |
 | Repeat reviews | **Instant** | a URL reviewed in the last 24 hours replays the saved review. Measured 0.13 to 0.22 s against about 60 s for a live run |
 | Firefox add-on store listing | **Not yet** | load it unpacked (four steps below). An addons.mozilla.org review would not finish before the deadline |
 
@@ -140,7 +140,7 @@ Short version: **Otari is every model call, every search and fetch, the sandbox,
 | Web search and fetch | `Otari.search`, `Otari.fetch` in `backend/otari.py`, used in the policy step; `otari_web_search` in the research loop | "Found the privacy policy … via otari_fetch" with the URL |
 | Code execution | `Review._compute` and `COMPUTE_SCRIPT` in `backend/pipeline.py`, via `Otari.code_execute` | the "Fine print, by the numbers" card, labelled Otari code execution |
 | Guardrails | `backend/guard.py` and `/guardrail/validate` in `backend/app.py`, which follow Otari's guardrail-service contract; sent as `guardrails: [{"mode": "block", "url": …}]` on the extractor call | "No prompt injection found" or "Prompt injection detected and blocked", with the evidence and "guardrail via otari" |
-| Budgets and per-user budgets | `Otari._with_user` sends `user: ch-install:<id>`; `Otari.end_user_budget` reads `GET /end-users`; `403 budget_exceeded` ends the review with the budget shown | "Your free budget: $0.0408 of $0.05 used by this browser, resets Dec 1". Dashboard: spend per install |
+| Budgets and per-user budgets | `Otari._with_user` sends `user: ch-install:<id>`; `Otari.end_user_budget` reads `GET /end-users`; `403 budget_exceeded` ends the review with the budget shown | "Your free budget: $0.0408 of $1.00 used by this browser", with the reset date. Dashboard: spend per install |
 
 Sessions are a bonus: `Otari-Conversation-Id` groups one review's calls in Otari's dashboard.
 
@@ -229,7 +229,7 @@ These need an organization owner or admin. The API key cannot do them.
 
 **MCP server.** Open **Tools › MCP servers** and add `https://creeping-hunger-mcp.onrender.com/mcp` with a name containing `creeping`. New workspaces refuse MCP servers named by URL in a request, so the backend finds the stored server and sends its id (or set `MCP_SERVER_ID`).
 
-**Per-user budgets.** Open **Spend & budgets** and create a budget for end users. Open **API keys**, click **Create key**, click **Advanced**, tick **Service key**, and pick that budget as the **Default end-user budget**. A review costs about $0.04 in Otari's accounting (search and fetch included), so $0.05 covers one review per install; set $0.25 for about six. End-user budgets reset monthly. An ordinary key refuses the `user` field with a 403; the backend then drops the field and the sidebar says the per-user budget is off.
+**Per-user budgets.** Open **Spend & budgets** and create a budget for end users. Open **API keys**, click **Create key**, click **Advanced**, tick **Service key**, and pick that budget as the **Default end-user budget**. Set its period to daily (`calendar_day`); the default is monthly. We use $1.00 a day. A review costs about $0.04 in Otari's accounting (search and fetch included), so that is about 25 reviews per install per day. A $0.05 cap does not cover one review. Existing end users keep the budget they were created with. Set `END_USER_BUDGET_USD` to the same amount so the sidebar's bar matches. An ordinary key refuses the `user` field with a 403; the backend then drops the field and the sidebar says the per-user budget is off.
 
 **Guardrail.** No dashboard step. The extractor call names our service in `guardrails[].url` once `PUBLIC_BASE_URL` is public. Do not mandate it for the whole organization: the judge's input quotes the injection on purpose, and a mandate would block the judge. Hosted otari.ai has no guardrail service of its own.
 
@@ -241,7 +241,7 @@ These need an organization owner or admin. The API key cannot do them.
 | MCP tools called by Otari's tool loop | real on the public backend (`otari_managed_mcp_stored`). Locally, without a public MCP URL, the same functions run in-process and the UI says `local_fallback` |
 | Guardrail called by Otari | real on the public backend (`guardrail via otari`). Locally the backend runs the same check and says `guardrail via local` |
 | Judge fallback | real Otari routing policy. The demo switch sends a dead model first, so the first attempt fails with 424 and the client retries through the routing policy; the UI labels it |
-| Per-user budget | real Otari end users and spend. The limit shown ($0.05) comes from `END_USER_BUDGET_USD`, because an API key cannot read the budget itself |
+| Per-user budget | real Otari end users and spend. The limit shown ($1.00 a day) comes from `END_USER_BUDGET_USD`, because an API key cannot read the budget itself |
 | Cost shown | model costs from `usage.cost_usd`; "Otari billed" is the end user's spend after the review minus before. Search, fetch and code runs report no cost of their own |
 | Red-flag quotes | each is checked against the policy text and labelled. In the Fitbit review 3 of 4 were found word for word |
 | Policy diff | against the closest Wayback snapshot, which can be years old (2016 for Fitbit) |

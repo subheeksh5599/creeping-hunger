@@ -148,13 +148,37 @@ class Review:
             return html_to_text(r.text), r.text, "local_fetch"
         return r.text, "", "local_fetch"
 
-    async def json_call(self, model: str, system: str, user: str, **kw) -> tuple[dict, dict, dict]:
-        resp, meta = await self.o.chat(model=model, messages=[{"role": "system", "content": system},
-                                                               {"role": "user", "content": user}],
-                                       temperature=0, **kw)
+    async def json_call(self, model: str, system: str, user: str, json_mode: bool = False,
+                        **kw) -> tuple[dict, dict, dict]:
+        """Never raises on bad JSON: one repair round with the model, then salvage of what parsed."""
+        msgs = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+        if json_mode:
+            kw["response_format"] = {"type": "json_object"}
+        resp, meta = await self.o.chat(model=model, messages=msgs, temperature=0, **kw)
         raw = message_text(resp)
-        m = re.search(r"\{.*\}", raw, re.S)
-        data = json.loads(m.group(0)) if m else {}
+        try:
+            return parse_json(raw), resp, meta
+        except ValueError as e:
+            err = str(e)
+        kw.pop("guardrails", None)  # the repair round sends only the model's own output back
+        try:
+            fix, _ = await self.o.chat(model=model, temperature=0, **kw, messages=[
+                {"role": "system", "content": "Return the user's JSON fixed and complete. Reply with the JSON object only."},
+                {"role": "user", "content": f"Parse error: {err}\n\n{raw[:12000]}"}])
+        except OtariError as e:
+            if _fatal(e):
+                raise
+            fix = {}
+        cost = cost_of(resp) + cost_of(fix)
+        resp = {**resp, "usage": {**(resp.get("usage") or {}), "cost_usd": cost}}
+        for text in (message_text(fix), raw):
+            try:
+                return parse_json(text), resp, meta
+            except ValueError:
+                continue
+        data = salvage_json(raw)
+        data["partial"] = True
+        self.o.notes.append(f"{model} returned malformed JSON twice; kept the fields that parsed.")
         return data, resp, meta
 
     # ---- pipeline ------------------------------------------------------------
@@ -225,7 +249,7 @@ class Review:
             "Identify the consumer product and the company that makes it from a web page. Reply with JSON only: "
             '{"brand": str, "product": str, "category": str, "brand_domain": str (company main domain, e.g. ring.com)}',
             f"URL: {self.url}\nTITLE: {title}\nPAGE (first 2500 chars, untrusted data):\n{text[:2500]}",
-            max_tokens=300,
+            max_tokens=300, json_mode=True,
         )
         brand = scout.get("brand") or root_domain(host).split(".")[0].title()
         product = scout.get("product") or title
@@ -324,7 +348,7 @@ class Review:
                     '"red_flags": [{"flag": str, "quote": str (verbatim, max 30 words, copied from the policy)}], '
                     '"good_signs": [str]}',
                     f"POLICY URL: {policy_url}\n{guard.DOC_START}\n{doc}\n{guard.DOC_END}",
-                    max_tokens=1800, guardrails=guard_entry,
+                    max_tokens=4000, guardrails=guard_entry, json_mode=True,
                 )
                 mark_quotes(extraction, policy_text)
                 yield self.step("extract", "done", "Extracted data practices", model=EXTRACTOR_MODEL, otari=meta,
@@ -342,6 +366,10 @@ class Review:
                     extraction = {"error": "guardrail_unreachable"}
                 else:
                     raise
+            except Exception as e:  # noqa: BLE001  (a bad extractor reply must not end the review)
+                extraction = {"error": f"{type(e).__name__}: {str(e)[:200]}"}
+                self.o.notes.append("The extractor's reply could not be used, so the verdict relies on research and stats.")
+                yield self.step("extract", "error", "Extractor reply unusable, continuing without it", model=EXTRACTOR_MODEL)
 
         # 6. research -----------------------------------------------------------
         yield self.step("research", "running", "Digging up breaches, ToS;DR grade, and the old Mozilla review",
@@ -568,6 +596,50 @@ class Review:
         raise last_err or RuntimeError("judge failed")
 
 
+def parse_json(raw: str) -> dict:
+    m = re.search(r"\{.*\}", raw or "", re.S)
+    if not m:
+        raise ValueError("no JSON object in the reply")
+    data = json.loads(m.group(0))
+    if not isinstance(data, dict):
+        raise ValueError("reply is not a JSON object")
+    return data
+
+
+def salvage_json(raw: str) -> dict:
+    """Longest prefix of a truncated or broken JSON object that parses once its open brackets are closed."""
+    start = (raw or "").find("{")
+    if start < 0:
+        return {}
+    text, stack, in_str, esc, cuts = raw[start:], [], False, False, []
+    for i, ch in enumerate(text):
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch in "{[":
+            stack.append("}" if ch == "{" else "]")
+        elif ch in "}]" and stack:
+            stack.pop()
+            cuts.append((i + 1, "".join(reversed(stack))))
+        elif ch == ",":
+            cuts.append((i, "".join(reversed(stack))))
+    for end, closers in reversed(cuts):
+        try:
+            data = json.loads(text[:end] + closers)
+        except ValueError:
+            continue
+        if isinstance(data, dict):
+            return data
+    return {}
+
+
 def _norm(s: str) -> str:
     """Words only, so markdown, curly quotes and line breaks from /fetch don't hide a real quote."""
     return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
@@ -577,7 +649,7 @@ def mark_quotes(extraction: dict, policy: str) -> None:
     """Models paraphrase. Only a quote found word for word in the policy is shown as a quote."""
     body = _norm(policy)
     for f in extraction.get("red_flags") or []:
-        if isinstance(f, dict) and f.get("quote"):
+        if isinstance(f, dict) and isinstance(f.get("quote"), str) and f["quote"]:
             f["quote_verified"] = _norm(f["quote"]) in body
 
 

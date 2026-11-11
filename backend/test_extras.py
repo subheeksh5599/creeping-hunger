@@ -6,7 +6,7 @@ import time
 import unittest
 from unittest.mock import AsyncMock, patch
 
-from pipeline import Review, foreign_locale, looks_like_policy, mostly_latin, parse_verdict
+from pipeline import Review, foreign_locale, looks_like_policy, mostly_latin, parse_verdict, salvage_json
 
 VERDICT = """SCORE: 4
 LABEL: Very creepy
@@ -58,6 +58,43 @@ class PolicyPickTest(unittest.TestCase):
     def test_nav_shell_is_not_a_policy(self):
         self.assertFalse(looks_like_policy("Fitbit Legal - Privacy Policy\n- Products\n- Store\n" * 30))
         self.assertTrue(looks_like_policy("We collect your personal information and share it. " * 30))
+
+
+BROKEN = ('{"data_collected": ["email", "heart \\"rate\\""], "sells_data": "no", '
+          '"red_flags": [{"flag": "Google", "quote": "Fitbit and Google will share"}, {"flag": "Retention", "quote": "It may take up')
+
+
+def reply(text: str) -> dict:
+    return {"choices": [{"message": {"content": text}}], "usage": {"cost_usd": 0.001}}
+
+
+class MalformedJsonTest(unittest.TestCase):
+    def test_salvage_keeps_complete_fields_of_truncated_json(self):
+        data = salvage_json(BROKEN)
+        self.assertEqual(data["data_collected"], ["email", 'heart "rate"'])
+        self.assertEqual(data["sells_data"], "no")
+        self.assertEqual(data["red_flags"], [{"flag": "Google", "quote": "Fitbit and Google will share"},
+                                             {"flag": "Retention"}])
+
+    def run_json_call(self, *replies):
+        review = Review("https://x.test/p", None, None, "unit")
+        review.o.chat = AsyncMock(side_effect=[(reply(r), {}) for r in replies])
+        data, resp, _ = asyncio.run(review.json_call("m", "sys", "user", json_mode=True, guardrails=[{"url": "g"}]))
+        return review, data, resp
+
+    def test_repair_round_fixes_bad_json(self):
+        review, data, resp = self.run_json_call(BROKEN, '{"sells_data": "no", "red_flags": []}')
+        self.assertEqual(data, {"sells_data": "no", "red_flags": []})
+        self.assertAlmostEqual(resp["usage"]["cost_usd"], 0.002)
+        first, second = review.o.chat.call_args_list
+        self.assertEqual(first.kwargs["response_format"], {"type": "json_object"})
+        self.assertNotIn("guardrails", second.kwargs)
+
+    def test_two_bad_replies_salvage_instead_of_raising(self):
+        review, data, _ = self.run_json_call(BROKEN, "still not json")
+        self.assertTrue(data["partial"])
+        self.assertEqual(data["sells_data"], "no")
+        self.assertTrue(any("malformed JSON" in n for n in review.o.notes))
 
 
 class CacheTest(unittest.TestCase):
