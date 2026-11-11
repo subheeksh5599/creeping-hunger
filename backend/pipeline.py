@@ -72,6 +72,23 @@ def privacy_links(html: str, base: str) -> list[str]:
     return out
 
 
+FOREIGN_LOCALE = re.compile(r"/(cn|zh|zh-cn|zh-tw|tw|hk|jp|ja|kr|ko|de|fr|es|it|nl|pl|ru|pt|br|tr|se|dk|no|fi)(/|[-_]|$)")
+
+
+def foreign_locale(url: str) -> bool:
+    return bool(FOREIGN_LOCALE.search(urlparse(url).path.lower()))
+
+
+def mostly_latin(text: str) -> bool:
+    sample = text[:4000]
+    return sum(ord(c) > 0x24F for c in sample) < 0.2 * max(1, len(sample))
+
+
+def looks_like_policy(text: str) -> bool:
+    """Rejects nav-only shells of JS-rendered pages and policies in another language."""
+    return len(text) > 800 and mostly_latin(text) and bool(re.search(r"(?i)personal (data|information)", text))
+
+
 def root_domain(host: str) -> str:
     return mcp_tools._root_domain(host)
 
@@ -109,9 +126,9 @@ class Review:
             self.total_cost += float(kw["cost_usd"])
         return ev("step", id=sid, status=status, title=title, total_cost_usd=round(self.total_cost, 6), **kw)
 
-    async def read_url(self, url: str) -> tuple[str, str, str]:
+    async def read_url(self, url: str, use_otari: bool = True) -> tuple[str, str, str]:
         """Returns (text, html_or_empty, via). Otari /fetch first; local fetch if Otari can't."""
-        if self.web_access and not urlparse(url).hostname in ("localhost", "127.0.0.1"):
+        if use_otari and self.web_access and urlparse(url).hostname not in ("localhost", "127.0.0.1"):
             try:
                 j, _ = await self.o.fetch(url)
                 content = j.get("content") or j.get("text") or j.get("markdown") or ""
@@ -227,10 +244,10 @@ class Review:
         if tools.get("search") and self.web_access:
             try:
                 sj, search_meta = await self.o.search(f"{brand} privacy policy {brand_domain}", max_results=5)
-                for r in sj.get("results", []):
-                    u = r.get("url", "")
-                    if "privacy" in u.lower() and root_domain(urlparse(u).hostname or "") == root_domain(brand_domain):
-                        cands.insert(0, u)
+                found = [r.get("url", "") for r in sj.get("results", [])]
+                found = [u for u in found if "privacy" in u.lower()
+                         and root_domain(urlparse(u).hostname or "") == root_domain(brand_domain)]
+                cands = [u for u in found if not foreign_locale(u)] + cands
             except OtariError as e:
                 if e.code == "web_access_disabled":
                     self.web_access = False
@@ -247,10 +264,11 @@ class Review:
                 continue
             seen.add(u)
             try:
-                t, _, via = await self.read_url(u)
+                # Each Otari /fetch costs about $0.01 of the per-user budget, so only the likeliest three use it.
+                t, _, via = await self.read_url(u, use_otari=len(seen) <= 3)
             except (httpx.HTTPError, OtariError):
                 continue
-            if len(t) > 800 and re.search(r"(?i)personal (data|information)|privacy", t):
+            if looks_like_policy(t):
                 policy_text, policy_url, policy_via = t, u, via
                 break
         if not policy_text:
@@ -551,7 +569,8 @@ class Review:
 
 
 def _norm(s: str) -> str:
-    return re.sub(r"\s+", " ", s.replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')).strip().lower()
+    """Words only, so markdown, curly quotes and line breaks from /fetch don't hide a real quote."""
+    return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
 
 
 def mark_quotes(extraction: dict, policy: str) -> None:
@@ -559,7 +578,7 @@ def mark_quotes(extraction: dict, policy: str) -> None:
     body = _norm(policy)
     for f in extraction.get("red_flags") or []:
         if isinstance(f, dict) and f.get("quote"):
-            f["quote_verified"] = _norm(f["quote"]).strip('"') in body
+            f["quote_verified"] = _norm(f["quote"]) in body
 
 
 def parse_verdict(text: str) -> dict:

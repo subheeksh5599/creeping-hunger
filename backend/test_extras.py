@@ -6,7 +6,7 @@ import time
 import unittest
 from unittest.mock import AsyncMock, patch
 
-from pipeline import Review, parse_verdict
+from pipeline import Review, foreign_locale, looks_like_policy, mostly_latin, parse_verdict
 
 VERDICT = """SCORE: 4
 LABEL: Very creepy
@@ -44,6 +44,20 @@ class TipsTest(unittest.TestCase):
     def test_no_tips_keeps_body(self):
         v = parse_verdict("SCORE: 2\n---\nFine.")
         self.assertEqual((v["verdict_md"], v["tips"]), ("Fine.", []))
+
+
+class PolicyPickTest(unittest.TestCase):
+    def test_foreign_locale_policies_go_last(self):
+        urls = ["https://www.fitbit.com/cn/legal/privacy-policy", "https://www.fitbit.com/global/us/legal/privacy-policy"]
+        self.assertEqual(sorted(urls, key=foreign_locale)[0], urls[1])
+
+    def test_non_latin_policy_is_skipped(self):
+        self.assertFalse(mostly_latin("隐私政策" * 200))
+        self.assertTrue(mostly_latin("We collect your personal information. " * 50))
+
+    def test_nav_shell_is_not_a_policy(self):
+        self.assertFalse(looks_like_policy("Fitbit Legal - Privacy Policy\n- Products\n- Store\n" * 30))
+        self.assertTrue(looks_like_policy("We collect your personal information and share it. " * 30))
 
 
 class CacheTest(unittest.TestCase):

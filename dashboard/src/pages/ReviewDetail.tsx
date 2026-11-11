@@ -5,10 +5,12 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { BudgetMeter } from "@/components/BudgetMeter"
 import { CreepMeter } from "@/components/CreepMeter"
+import { JudgeBadges } from "@/components/JudgeBadges"
 import { Disclaimer } from "@/components/Disclaimer"
 import { Nav } from "@/components/Nav"
-import { getBudget, getReview, usd, type Budget, type ResultEvent, type ReviewEvent, type StepEvent } from "@/lib/api"
+import { getBudget, getReview, usd, type Budget, type DoneEvent, type ResultEvent, type ReviewEvent, type StepEvent } from "@/lib/api"
 
 type Detail = { events: ReviewEvent[]; budget: Budget }
 
@@ -37,7 +39,7 @@ export function ReviewDetail({ id }: { id: string }) {
 
   const { events, budget } = detail
   const result = events.find((e): e is ResultEvent => e.type === "result")
-  const done = events.find((e) => e.type === "done")
+  const done = events.find((e): e is DoneEvent => e.type === "done")
   const failure = events.find((e) => e.type === "error")
   const start = events.find((e) => e.type === "start")
   const steps = latestSteps(events)
@@ -65,19 +67,25 @@ export function ReviewDetail({ id }: { id: string }) {
               {result?.blocked && <Badge variant="destructive">Prompt injection blocked</Badge>}
             </div>
             <p className="whitespace-pre-line text-sm leading-relaxed">{result?.verdict_md.replace(/^#+\s*/gm, "").replaceAll("**", "")}</p>
+            {result?.judge && <JudgeBadges judge={result.judge} />}
           </CardContent>
         </Card>
         <div className="flex flex-col gap-4">
           <Card>
-            <CardHeader><CardDescription>Cost of this review</CardDescription><CardTitle className="text-3xl">{usd(done?.type === "done" ? done.total_cost_usd : null)}</CardTitle></CardHeader>
-            <CardContent className="text-sm text-muted-foreground">{done?.type === "done" && `${done.seconds}s end to end`}</CardContent>
+            <CardHeader>
+              <CardDescription>{done?.billed_usd != null ? "Otari billed for this review" : "Model cost of this review"}</CardDescription>
+              <CardTitle className="text-3xl tabular-nums">{usd(done?.billed_usd ?? done?.total_cost_usd)}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              {done && `${done.seconds} s end to end. Model calls ${usd(done.total_cost_usd)}${done.billed_usd != null ? ", search and fetch the rest" : ""}.`}
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardDescription>Per-user budget (Otari end user)</CardDescription></CardHeader>
-            <CardContent className="text-sm">
-              {budget.available
-                ? <pre className="overflow-auto text-xs">{JSON.stringify(budget.end_user, null, 1)}</pre>
-                : <span className="text-muted-foreground">Unavailable: {budget.reason}</span>}
+            <CardHeader><CardDescription>Per-user budget for this install, live from Otari</CardDescription></CardHeader>
+            <CardContent>
+              {budget.budget
+                ? <BudgetMeter budget={budget.budget} />
+                : <span className="text-sm text-muted-foreground">Not available. The backend key is not a service key, so Otari has no end user for this install.</span>}
             </CardContent>
           </Card>
           <Card>
@@ -89,6 +97,13 @@ export function ReviewDetail({ id }: { id: string }) {
           </Card>
         </div>
       </div>
+
+      {result?.tips && result.tips.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>Tips to protect yourself</CardTitle><CardDescription>Written by the judge model from this policy, in the old PNI format.</CardDescription></CardHeader>
+          <CardContent><ul className="flex list-disc flex-col gap-1 pl-5 text-sm">{result.tips.map((t) => <li key={t}>{t.replaceAll("**", "")}</li>)}</ul></CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle>Which model did what</CardTitle><CardDescription>Otari-Model, Otari-Fallback and attempt count as Otari reported them.</CardDescription></CardHeader>
@@ -117,7 +132,7 @@ export function ReviewDetail({ id }: { id: string }) {
             {ex?.blocked && <span className="text-muted-foreground">Skipped. The page tried to instruct our models.</span>}
             {ex?.red_flags?.map((f, i) => typeof f === "string"
               ? <p key={i}>{f}</p>
-              : <div key={i} className="flex flex-col gap-1"><span className="font-medium">{f.flag}</span>{f.quote && <q className="italic text-muted-foreground">{f.quote}</q>}{f.quote_verified === false && <Badge variant="outline">paraphrase, not found verbatim</Badge>}</div>)}
+              : <div key={i} className="flex flex-col gap-1"><span className="font-medium">{f.flag}</span>{f.quote && <q className="border-l-2 pl-3 italic text-muted-foreground">{f.quote}</q>}{f.quote_verified === false && <Badge variant="outline">paraphrase, not found verbatim</Badge>}{f.quote_verified && <Badge variant="secondary" className="w-fit">found word for word in the policy</Badge>}</div>)}
             {ex && !ex.blocked && <p className="text-muted-foreground">Sells data: {ex.sells_data}. Ad sharing: {ex.shares_for_ads}. AI training: {ex.ai_training}. Retention: {ex.retention}</p>}
           </CardContent>
         </Card>
@@ -146,7 +161,7 @@ export function ReviewDetail({ id }: { id: string }) {
           </CardContent>
         </Card>
       )}
-      {done?.type === "done" && done.notes.length > 0 && (
+      {done && done.notes.length > 0 && (
         <Alert><AlertTitle>Setup notes</AlertTitle><AlertDescription><ul className="list-disc pl-5">{done.notes.map((n) => <li key={n}>{n}</li>)}</ul></AlertDescription></Alert>
       )}
       <Disclaimer />

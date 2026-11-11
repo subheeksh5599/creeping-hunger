@@ -71,6 +71,24 @@ export type Stats = {
   error?: string
 }
 
+export type Judge = {
+  model: string
+  provider?: string | null
+  fallback_used: boolean
+  attempts?: number | string | null
+  policy: string | null
+  forced?: boolean
+}
+
+export type EndUserBudget = {
+  spend_usd: number
+  limit_usd: number
+  remaining_usd: number
+  resets_at: string | null
+  blocked: boolean
+  requests?: number | null
+}
+
 export type ResultEvent = {
   type: "result"
   score: number
@@ -78,6 +96,8 @@ export type ResultEvent = {
   headline: string
   warning_label: boolean
   verdict_md: string
+  tips?: string[]
+  judge?: Judge
   brand: string
   product: string
   policy_url: string | null
@@ -90,9 +110,23 @@ export type ResultEvent = {
 export type ReviewEvent =
   | StepEvent
   | ResultEvent
-  | { type: "start"; review_id: string; url: string; models: Record<string, string> }
-  | { type: "done"; total_cost_usd: number; seconds: number; notes: string[]; end_user?: string; end_user_accepted?: boolean }
-  | { type: "error"; code: string | null; message: string }
+  | StartEvent
+  | DoneEvent
+  | { type: "error"; code: string | null; message: string; budget?: EndUserBudget | null }
+
+export type StartEvent = { type: "start"; review_id: string; url: string; models: Record<string, string>; cached_from?: string }
+
+export type DoneEvent = {
+  type: "done"
+  total_cost_usd: number
+  billed_usd?: number | null
+  seconds: number
+  notes: string[]
+  end_user?: string
+  end_user_accepted?: boolean
+  budget?: EndUserBudget | null
+  cached?: boolean
+}
 
 export type ReviewSummary = {
   id: string
@@ -106,10 +140,13 @@ export type ReviewSummary = {
   headline: string | null
   blocked: boolean
   total_cost_usd: number | null
+  seconds?: number | null
+  billed_usd?: number | null
+  fallback_used?: boolean
   error: string | null
 }
 
-export type Budget = { available: true; end_user: Record<string, unknown> | null } | { available: false; reason: string }
+export type Budget = { available: boolean; budget: EndUserBudget | null }
 
 // Where the API lives. The dashboard is normally served by the backend itself
 // (https://creeping-hunger.onrender.com), so same-origin is the default.

@@ -23,6 +23,7 @@ def save(review_id: str, install_id: str, url: str, events: list[dict], forced_f
         "headline": result and result["headline"], "blocked": bool(result and result["blocked"]),
         "total_cost_usd": done["total_cost_usd"] if done else None,
         "seconds": done["seconds"] if done else None,
+        "billed_usd": done.get("billed_usd") if done else None,
         "fallback_used": bool(result and (result.get("judge") or {}).get("fallback_used")),
         "forced_fallback": forced_fallback,
         "error": error and error["message"],

@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 import guard
 import store
-from otari import Otari, OtariError
+from otari import Otari
 from pipeline import Review
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -63,14 +63,12 @@ async def review_detail(review_id: str):
 
 @app.get("/api/budget/{install_id}")
 async def budget(install_id: str):
-    o = Otari()
+    o = Otari(end_user=f"ch-install:{install_id}")
     try:
-        rows = await o.get(f"/end-users?external_id=ch-install:{install_id}")
-        return {"available": True, "end_user": rows[0] if rows else None}
-    except OtariError as e:
-        return {"available": False, "reason": e.detail}
+        b = await o.end_user_budget()
     finally:
         await o.aclose()
+    return {"available": b is not None, "budget": b}
 
 
 # ---- guardrail service (Otari's contract) ------------------------------------
