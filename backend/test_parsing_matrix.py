@@ -9,9 +9,9 @@ from unittest.mock import AsyncMock
 import pytest
 
 from otari import OtariError
-from pipeline import (Review, foreign_locale, html_to_text, looks_like_policy, mark_quotes, mostly_latin, parse_json,
-                      parse_verdict, pni_stale, privacy_links, privacy_links_text, root_domain, salvage_json, split_tips,
-                      title_of)
+from pipeline import (Review, foreign_locale, html_to_text, looks_like_policy, mark_quotes, mostly_latin,
+                      order_policy_links, parse_json, parse_verdict, pni_stale, privacy_links, privacy_links_text,
+                      root_domain, salvage_json, split_tips, title_of)
 
 ROOT = Path(__file__).resolve().parent.parent
 EXTRACTION = {
@@ -187,6 +187,33 @@ def test_privacy_links_in_html(html, expected):
 ])
 def test_privacy_links_in_markdown(text, expected):
     assert privacy_links_text(text, "https://shop.test/products/x") == expected
+
+
+def test_order_policy_links_prefers_official_same_site_policy():
+    urls = [
+        "https://periodtrackerdataprivacylitigation.com/",
+        "https://flo.health/privacy-portal",
+        "https://flo.health/flo-privacy-faqs",
+        "https://flo.health/privacy-policy",
+    ]
+    assert order_policy_links(urls, "flo.health")[0] == "https://flo.health/privacy-policy"
+
+
+def test_order_policy_links_keeps_partner_policies_behind_same_site():
+    urls = [
+        "https://www.amazon.com/b/?node=19149155011",
+        "https://eero.com/legal/privacy",
+        "https://www.amazon.com/gp/help/customer/display.html?nodeId=GX7NJQ4ZB8MHFRNJ&ref_=footer_privacy",
+    ]
+    ordered = order_policy_links(urls, "amazon.com")
+    assert "GX7NJQ4ZB8MHFRNJ" in ordered[0]
+    assert ordered[-1] == "https://eero.com/legal/privacy"
+
+
+def test_order_policy_links_still_keeps_a_parent_company_policy():
+    urls = ["https://www.gm.com/privacy-statement?evar25=ch_footer",
+            "https://www.gm.com/consumer-privacy?evar25=ch_footer"]
+    assert order_policy_links(urls, "chevrolet.com")[0].startswith("https://www.gm.com/privacy-statement")
 
 
 @pytest.mark.parametrize("url,foreign", [

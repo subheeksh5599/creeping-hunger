@@ -114,6 +114,29 @@ def same_site(url: str, domain: str, pinned: bool) -> bool:
     return hit == domain if pinned else root_domain(hit) == root_domain(domain)
 
 
+POLICY_PATH = re.compile(r"privacy[-_]?policy|privacy[-_]?notice|privacy[-_]?statement|/legal/privacy")
+WEAK_POLICY = re.compile(r"faq|portal|litigation|privacyprefs|privacy-settings|privacy-center|overview")
+
+
+def order_policy_links(urls: list[str], site: str) -> list[str]:
+    """Prefer the company's own official policy over partner, FAQ, or portal links found on the same page."""
+    def key(u: str) -> tuple[int, int, int]:
+        parts = urlparse(u)
+        host = (parts.hostname or "").lower()
+        path = (parts.path or "").lower()
+        blob = f"{path}?{parts.query or ''} {host}"
+        same = root_domain(host) == root_domain(site)
+        official = bool(POLICY_PATH.search(path))
+        weak = bool(WEAK_POLICY.search(blob)) or "node=" in (parts.query or "").lower()
+        return (0 if same else 1, 0 if official else 1, 1 if weak else 0)
+    seen, out = set(), []
+    for u in sorted(urls, key=key):
+        if u not in seen:
+            seen.add(u)
+            out.append(u)
+    return out
+
+
 def ev(type_: str, **kw) -> dict:
     return {"type": type_, **kw}
 
@@ -284,7 +307,8 @@ class Review:
         yield self.step("policy", "running", "Hunting down the privacy policy")
         cands: list[str] = []
         search_meta = None
-        cands += privacy_links(html, self.url) if html else privacy_links_text(text, self.url)
+        page_links = privacy_links(html, self.url) if html else privacy_links_text(text, self.url)
+        cands += order_policy_links(page_links, brand_domain or host)
         if tools.get("search") and self.web_access:
             try:
                 sj, search_meta = await self.o.search(f"{brand} privacy policy {brand_domain}", max_results=5)
