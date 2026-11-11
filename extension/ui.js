@@ -5,11 +5,12 @@ const CH = (() => {
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const md = (s) => esc(s)
     .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*(?!\s)(.+?)\*/g, "$1<i>$2</i>")
-    .split(/\n/).map((l) => /^\s*[-*•]\s+/.test(l) ? `<li>${l.replace(/^\s*[-*•]\s+/, "")}</li>` : (l.trim() ? `<p>${l}</p>` : "")).join("")
+    .split(/\n/).map((l) => /^\s*#+\s/.test(l) ? `<p><b>${l.replace(/^\s*#+\s*/, "")}</b></p>` : /^\s*[-*•]\s+/.test(l) ? `<li>${l.replace(/^\s*[-*•]\s+/, "")}</li>` : (l.trim() ? `<p>${l}</p>` : "")).join("")
     .replace(/(<li>.*?<\/li>)+/gs, (m) => `<ul>${m}</ul>`);
   const usd = (n) => n ? "$" + Number(n).toFixed(n < 0.01 ? 5 : 4) : "";
 
-  function chips(o = {}, model) {
+  function chips(o, model) {
+    o = o || {};
     const m = o["otari-model"] || model;
     const out = [];
     if (m) out.push(`<span class="chip model" title="Otari-Model">${esc(m)}</span>`);
@@ -62,7 +63,7 @@ const CH = (() => {
         ${st7.diff_vs_archive ? `<p class="small">vs archived policy: ${Math.round(st7.diff_vs_archive.similarity * 100)}% similar, +${st7.diff_vs_archive.added_sentences} / −${st7.diff_vs_archive.removed_sentences} sentences</p>` : ""}</section>` : ""}
       ${r && !ex.blocked ? `<section class="card"><h3>What they collect</h3>
         <p class="small"><b>Sells data:</b> ${esc(ex.sells_data)} · <b>Ads sharing:</b> ${esc(ex.shares_for_ads)} · <b>AI training:</b> ${esc(ex.ai_training)}</p>
-        ${(ex.red_flags || []).length ? `<p class="small"><b>Red flags</b></p><ul class="small">${ex.red_flags.slice(0, 6).map((x) => typeof x === "string" ? `<li>${esc(x)}</li>` : `<li>${esc(x.flag)}${x.quote ? `<br><q>${esc(x.quote)}</q>` : ""}</li>`).join("")}</ul>` : ""}
+        ${(ex.red_flags || []).length ? `<p class="small"><b>Red flags</b></p><ul class="small">${ex.red_flags.slice(0, 6).map((x) => typeof x === "string" ? `<li>${esc(x)}</li>` : `<li>${esc(x.flag)}${x.quote ? `<br><q>${esc(x.quote)}</q>${x.quote_verified === false ? ` <span class="chip warn">paraphrase, not found verbatim</span>` : ""}` : ""}</li>`).join("")}</ul>` : ""}
         ${(ex.data_collected || []).length ? `<details class="small"><summary>Data collected (${ex.data_collected.length})</summary>${esc(ex.data_collected.join(", "))}</details>` : ""}</section>` : ""}
       ${r ? `<section class="card"><h3>Track record <span class="chip">MCP</span></h3>
         <p class="small"><b>Breaches:</b> ${(rs.breaches || []).length ? rs.breaches.map((b) => esc(`${b.name} (${b.date})`)).join(", ") : "none on record"}</p>
@@ -70,6 +71,20 @@ const CH = (() => {
         <p class="small"><b>Old Mozilla PNI review:</b> ${rs.pni_found ? `${esc(rs.pni_people_voted || "")}${rs.pni_warning_label ? " · had the warning label" : ""}` : "none archived"}</p></section>` : ""}
       <p class="small disclaimer">Not legal advice. Not a current Mozilla *Privacy Not Included review. Archived PNI text can be out of date, and the score can be wrong.</p>
       ${(st.notes || []).length ? `<section class="card notes"><h3>Setup notes</h3><ul class="small">${st.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul></section>` : ""}`;
+  }
+
+  function apply(st, e) {
+    if (e.type === "step") { st.steps[e.id] = { ...(st.steps[e.id] || {}), ...e }; st.total = e.total_cost_usd; }
+    else if (e.type === "token") st.stream += e.text;
+    else if (e.type === "result") st.result = e;
+    else if (e.type === "error") st.error = e.message;
+    else if (e.type === "done") { st.notes = e.notes || []; st.total = e.total_cost_usd; st.endUser = e.end_user; st.endUserOk = e.end_user_accepted; }
+  }
+
+  function replay(events, root) {
+    const st = { steps: {}, stream: "", total: 0, running: false, result: null, error: null, notes: [] };
+    events.forEach((e) => apply(st, e));
+    root.innerHTML = render(st);
   }
 
   async function run({ backend, url, page_text, page_html, install_id, force_fallback, root, button }) {
@@ -91,17 +106,12 @@ const CH = (() => {
         while ((i = buf.indexOf("\n\n")) >= 0) {
           const line = buf.slice(0, i); buf = buf.slice(i + 2);
           if (!line.startsWith("data: ")) continue;
-          const e = JSON.parse(line.slice(6));
-          if (e.type === "step") { st.steps[e.id] = { ...(st.steps[e.id] || {}), ...e }; st.total = e.total_cost_usd; }
-          else if (e.type === "token") st.stream += e.text;
-          else if (e.type === "result") st.result = e;
-          else if (e.type === "error") st.error = e.message;
-          else if (e.type === "done") { st.notes = e.notes || []; st.total = e.total_cost_usd; st.endUser = e.end_user; st.endUserOk = e.end_user_accepted; }
+          apply(st, JSON.parse(line.slice(6)));
           draw();
         }
       }
     } catch (err) { st.error = `Couldn't reach the Creeping Hunger backend (${err.message}). Is it running?`; }
     st.running = false; if (button) button.disabled = false; draw();
   }
-  return { run };
+  return { run, replay };
 })();

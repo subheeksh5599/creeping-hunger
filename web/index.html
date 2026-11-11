@@ -21,4 +21,6 @@
   document.getElementById("go").onclick = () => CH.run({ backend: location.origin, url: document.getElementById("url").value.trim(),
     install_id: id, force_fallback: document.getElementById("fallback").checked,
     root: document.getElementById("app"), button: document.getElementById("go") });
+  const replayId = new URLSearchParams(location.search).get("review");
+  if (replayId) fetch(`/api/reviews/${replayId}`).then(r => r.json()).then(d => CH.replay(d.events, document.getElementById("app")));
 </script></body></html>

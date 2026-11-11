@@ -64,7 +64,7 @@ export function ReviewDetail({ id }: { id: string }) {
               {result?.warning_label && <Badge variant="destructive">*Privacy Not Included</Badge>}
               {result?.blocked && <Badge variant="destructive">Prompt injection blocked</Badge>}
             </div>
-            <p className="whitespace-pre-line text-sm leading-relaxed">{result?.verdict_md}</p>
+            <p className="whitespace-pre-line text-sm leading-relaxed">{result?.verdict_md.replace(/^#+\s*/gm, "").replaceAll("**", "")}</p>
           </CardContent>
         </Card>
         <div className="flex flex-col gap-4">
@@ -117,7 +117,7 @@ export function ReviewDetail({ id }: { id: string }) {
             {ex?.blocked && <span className="text-muted-foreground">Skipped. The page tried to instruct our models.</span>}
             {ex?.red_flags?.map((f, i) => typeof f === "string"
               ? <p key={i}>{f}</p>
-              : <div key={i} className="flex flex-col gap-1"><span className="font-medium">{f.flag}</span>{f.quote && <q className="italic text-muted-foreground">{f.quote}</q>}</div>)}
+              : <div key={i} className="flex flex-col gap-1"><span className="font-medium">{f.flag}</span>{f.quote && <q className="italic text-muted-foreground">{f.quote}</q>}{f.quote_verified === false && <Badge variant="outline">paraphrase, not found verbatim</Badge>}</div>)}
             {ex && !ex.blocked && <p className="text-muted-foreground">Sells data: {ex.sells_data}. Ad sharing: {ex.shares_for_ads}. AI training: {ex.ai_training}. Retention: {ex.retention}</p>}
           </CardContent>
         </Card>

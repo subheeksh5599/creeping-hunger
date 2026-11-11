@@ -276,6 +276,7 @@ class Review:
                     f"POLICY URL: {policy_url}\n{guard.DOC_START}\n{doc}\n{guard.DOC_END}",
                     max_tokens=1800, guardrails=guard_entry,
                 )
+                mark_quotes(extraction, policy_text)
                 yield self.step("extract", "done", "Extracted data practices", model=EXTRACTOR_MODEL, otari=meta,
                                 cost_usd=cost_of(resp), data=extraction)
             except OtariError as e:
@@ -450,6 +451,18 @@ class Review:
                 yield self.step("judge", "running", f"{model} failed ({e.status}) — falling back",
                                 model=model, otari=e.meta)
         raise last_err or RuntimeError("judge failed")
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"\s+", " ", s.replace("\u2019", "'").replace("\u201c", '"').replace("\u201d", '"')).strip().lower()
+
+
+def mark_quotes(extraction: dict, policy: str) -> None:
+    """Models paraphrase. Only a quote found word for word in the policy is shown as a quote."""
+    body = _norm(policy)
+    for f in extraction.get("red_flags") or []:
+        if isinstance(f, dict) and f.get("quote"):
+            f["quote_verified"] = _norm(f["quote"]).strip('"') in body
 
 
 def parse_verdict(text: str) -> dict:

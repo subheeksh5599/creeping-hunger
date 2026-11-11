@@ -41,7 +41,7 @@ export type Extraction = {
   ai_training?: string
   ai_training_quote?: string
   opt_outs?: string[]
-  red_flags?: (string | { flag: string; quote?: string })[]
+  red_flags?: (string | { flag: string; quote?: string; quote_verified?: boolean })[]
   good_signs?: string[]
 }
 
