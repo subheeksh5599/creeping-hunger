@@ -17,4 +17,5 @@ services:
     name: creeping-hunger-mcp
     runtime: docker
     plan: free
-    dockerCommand: sh -c "MCP_PORT=$PORT python mcp_server/server.py"
+    dockerCommand: python mcp_server/server.py
+    healthCheckPath: /healthz

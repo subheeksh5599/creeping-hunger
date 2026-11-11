@@ -5,7 +5,7 @@ Tools
 - tosdr(domain_or_name): Terms of Service; Didn't Read grade + notable points
 - pni_archive(brand, product): Mozilla's sunset *Privacy Not Included* review, via the Wayback Machine
 
-Run:  python mcp_server/server.py            (streamable HTTP on :8765/mcp)
+Run:  python mcp_server/server.py            (streamable HTTP on :$MCP_PORT or $PORT, default 8765, at /mcp; GET /healthz)
 """
 from __future__ import annotations
 
@@ -159,5 +159,13 @@ def pni_archive(brand: str, product: str = "") -> dict:
     return pni_archive_impl(brand, product)
 
 
+@mcp.custom_route("/healthz", methods=["GET"])
+async def healthz(_request):
+    from starlette.responses import JSONResponse
+    return JSONResponse({"ok": True, "tools": ["hibp_breaches", "tosdr", "pni_archive"]})
+
+
 if __name__ == "__main__":
-    mcp.run(transport="http", host=os.getenv("MCP_HOST", "0.0.0.0"), port=int(os.getenv("MCP_PORT", "8765")))
+    # MCP_PORT for local runs; PORT is what Render (and most hosts) inject.
+    port = int(os.getenv("MCP_PORT") or os.getenv("PORT") or "8765")
+    mcp.run(transport="http", host=os.getenv("MCP_HOST", "0.0.0.0"), port=port)
