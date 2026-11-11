@@ -12,6 +12,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import guard
+import store
+from otari import Otari, OtariError
 from pipeline import Review
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -47,6 +49,29 @@ async def review_get(url: str, install_id: str = "anon", force_fallback: bool = 
     return sse(Review(url, None, None, install_id, force_fallback).run())
 
 
+@app.get("/api/reviews")
+async def reviews():
+    return store.list_summaries()
+
+
+@app.get("/api/reviews/{review_id}")
+async def review_detail(review_id: str):
+    r = store.get(review_id)
+    return r if r else JSONResponse({"detail": "not found"}, status_code=404)
+
+
+@app.get("/api/budget/{install_id}")
+async def budget(install_id: str):
+    o = Otari()
+    try:
+        rows = await o.get(f"/end-users?external_id=ch-install:{install_id}")
+        return {"available": True, "end_user": rows[0] if rows else None}
+    except OtariError as e:
+        return {"available": False, "reason": e.detail}
+    finally:
+        await o.aclose()
+
+
 # ---- guardrail service (Otari's contract) ------------------------------------
 @app.get("/guardrail/profiles")
 async def guard_profiles():
@@ -75,6 +100,13 @@ app.mount("/hostile", StaticFiles(directory=ROOT / "hostile", html=True), name="
 app.mount("/ui", StaticFiles(directory=ROOT / "extension"), name="ui")
 
 
-@app.get("/")
-async def index():
+DIST = ROOT / "dashboard" / "dist"
+
+
+@app.get("/try")
+async def try_page():
     return FileResponse(ROOT / "web" / "index.html")
+
+
+if DIST.is_dir():
+    app.mount("/", StaticFiles(directory=DIST, html=True), name="dashboard")

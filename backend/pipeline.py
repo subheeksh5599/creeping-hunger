@@ -27,6 +27,7 @@ from urllib.parse import urljoin, urlparse
 import httpx
 
 import guard
+import store
 from otari import Otari, OtariError, cost_of, message_text
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "mcp_server"))
@@ -130,16 +131,22 @@ class Review:
 
     # ---- pipeline ------------------------------------------------------------
     async def run(self) -> AsyncIterator[dict]:
+        events: list[dict] = []
         try:
             async for e in self._run():
+                if e["type"] != "token":
+                    events.append(e)
                 yield e
         except OtariError as e:
-            yield ev("error", code=e.code, status=e.status, message=e.friendly, otari=e.meta)
+            events.append(ev("error", code=e.code, status=e.status, message=e.friendly, otari=e.meta))
+            yield events[-1]
         except Exception as e:  # noqa: BLE001
-            yield ev("error", code="internal", message=f"{type(e).__name__}: {str(e)[:300]}")
+            events.append(ev("error", code="internal", message=f"{type(e).__name__}: {str(e)[:300]}"))
+            yield events[-1]
         finally:
             await self.o.aclose()
             await self.local_http.aclose()
+            store.save(self.review_id, self.install_id, self.url, events)
 
     async def _run(self) -> AsyncIterator[dict]:
         t0 = time.time()
@@ -263,7 +270,9 @@ class Review:
                     '{"data_collected": [str], "sensitive_data": [str] (biometrics, location, audio/video, health, kids), '
                     '"sells_data": "yes"|"no"|"unclear", "shares_with": [str], "shares_for_ads": "yes"|"no"|"unclear", '
                     '"law_enforcement": str, "retention": str, "ai_training": "yes"|"no"|"unclear", "ai_training_quote": str, '
-                    '"user_rights": [str], "opt_outs": [str], "red_flags": [str], "good_signs": [str]}',
+                    '"user_rights": [str], "opt_outs": [str], '
+                    '"red_flags": [{"flag": str, "quote": str (verbatim, max 30 words, copied from the policy)}], '
+                    '"good_signs": [str]}',
                     f"POLICY URL: {policy_url}\n{guard.DOC_START}\n{doc}\n{guard.DOC_END}",
                     max_tokens=1800, guardrails=guard_entry,
                 )
@@ -302,7 +311,8 @@ class Review:
                                    injected_into_page):
             yield e
         yield ev("done", review_id=self.review_id, total_cost_usd=round(self.total_cost, 6),
-                 seconds=round(time.time() - t0, 1), notes=list(dict.fromkeys(self.o.notes)))
+                 seconds=round(time.time() - t0, 1), notes=list(dict.fromkeys(self.o.notes)),
+                 end_user=self.o.end_user, end_user_accepted=self.o.send_end_user)
 
     async def _tool_availability(self) -> dict:
         try:

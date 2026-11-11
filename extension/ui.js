@@ -54,7 +54,7 @@ const CH = (() => {
         ${r?.blocked ? `<div class="pni">🛡️ This page tried to give our AI orders. Blocked.</div>` : ""}
         <div class="body">${md(r?.verdict_md || st.stream.replace(/^[\s\S]*?---/, "") || "")}</div>
       </section>
-      ${st.steps.read ? `<section class="card"><h3>How we got here <span class="total">${usd(st.total)} total</span></h3><ol class="steps">${steps}</ol></section>` : ""}
+      ${st.steps.read ? `<section class="card"><h3>How we got here <span class="total">${usd(st.total)} total</span></h3><ol class="steps">${steps}</ol>${st.endUser ? `<div class="chips"><span class="chip ${st.endUserOk ? "" : "warn"}" title="Otari user field">Otari user ${esc(st.endUser.slice(0, 22))}: ${st.endUserOk ? "per-user budget on" : "refused (needs service key)"}</span></div>` : ""}</section>` : ""}
       ${st7 && !st7.error ? `<section class="card"><h3>Fine print, by the numbers <span class="chip">Otari code execution</span></h3>
         <div class="stats"><div><b>${st7.reading_minutes}</b> min to read</div><div><b>${st7.fk_grade}</b> grade level</div>
         <div><b>${st7.clause_counts?.share ?? 0}</b> “share”</div><div><b>${st7.clause_counts?.third_party ?? 0}</b> “third party”</div>
@@ -62,12 +62,13 @@ const CH = (() => {
         ${st7.diff_vs_archive ? `<p class="small">vs archived policy: ${Math.round(st7.diff_vs_archive.similarity * 100)}% similar, +${st7.diff_vs_archive.added_sentences} / −${st7.diff_vs_archive.removed_sentences} sentences</p>` : ""}</section>` : ""}
       ${r && !ex.blocked ? `<section class="card"><h3>What they collect</h3>
         <p class="small"><b>Sells data:</b> ${esc(ex.sells_data)} · <b>Ads sharing:</b> ${esc(ex.shares_for_ads)} · <b>AI training:</b> ${esc(ex.ai_training)}</p>
-        ${(ex.red_flags || []).length ? `<p class="small"><b>Red flags</b></p><ul class="small">${ex.red_flags.slice(0, 6).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+        ${(ex.red_flags || []).length ? `<p class="small"><b>Red flags</b></p><ul class="small">${ex.red_flags.slice(0, 6).map((x) => typeof x === "string" ? `<li>${esc(x)}</li>` : `<li>${esc(x.flag)}${x.quote ? `<br><q>${esc(x.quote)}</q>` : ""}</li>`).join("")}</ul>` : ""}
         ${(ex.data_collected || []).length ? `<details class="small"><summary>Data collected (${ex.data_collected.length})</summary>${esc(ex.data_collected.join(", "))}</details>` : ""}</section>` : ""}
       ${r ? `<section class="card"><h3>Track record <span class="chip">MCP</span></h3>
         <p class="small"><b>Breaches:</b> ${(rs.breaches || []).length ? rs.breaches.map((b) => esc(`${b.name} (${b.date})`)).join(", ") : "none on record"}</p>
         <p class="small"><b>ToS;DR grade:</b> ${esc(rs.tosdr_grade || "n/a")}</p>
         <p class="small"><b>Old Mozilla PNI review:</b> ${rs.pni_found ? `${esc(rs.pni_people_voted || "")}${rs.pni_warning_label ? " · had the warning label" : ""}` : "none archived"}</p></section>` : ""}
+      <p class="small disclaimer">Not legal advice. Not a current Mozilla *Privacy Not Included review. Archived PNI text can be out of date, and the score can be wrong.</p>
       ${(st.notes || []).length ? `<section class="card notes"><h3>Setup notes</h3><ul class="small">${st.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul></section>` : ""}`;
   }
 
@@ -95,7 +96,7 @@ const CH = (() => {
           else if (e.type === "token") st.stream += e.text;
           else if (e.type === "result") st.result = e;
           else if (e.type === "error") st.error = e.message;
-          else if (e.type === "done") { st.notes = e.notes || []; st.total = e.total_cost_usd; }
+          else if (e.type === "done") { st.notes = e.notes || []; st.total = e.total_cost_usd; st.endUser = e.end_user; st.endUserOk = e.end_user_accepted; }
           draw();
         }
       }
