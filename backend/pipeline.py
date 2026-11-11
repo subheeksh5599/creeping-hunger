@@ -80,6 +80,16 @@ def ev(type_: str, **kw) -> dict:
     return {"type": type_, **kw}
 
 
+def _fatal(e: OtariError) -> bool:
+    return e.code in ("budget_exceeded", "user_blocked", "insufficient_funds", "pricing_required")
+
+
+def _degraded(step: str, e: OtariError) -> str:
+    if e.status in (502, 503, 504) or e.code in ("gateway_error", "gateway_timeout"):
+        return f"{step} unavailable: Otari timed out"
+    return f"{step} unavailable: {e.friendly}"
+
+
 class Review:
     def __init__(self, url: str, page_text: str | None, page_html: str | None, install_id: str,
                  force_fallback: bool = False):
@@ -295,16 +305,36 @@ class Review:
         # 6. research -----------------------------------------------------------
         yield self.step("research", "running", "Digging up breaches, ToS;DR grade, and the old Mozilla review",
                         model=RESEARCH_MODEL)
-        research, rmeta, rcost, calls, rmode = await self._research(brand, product, brand_domain, tools)
-        yield self.step("research", "done", "Background research done", model=RESEARCH_MODEL, otari=rmeta,
-                        cost_usd=rcost, data=research, tool_calls=calls, mcp_mode=rmode)
+        try:
+            research, rmeta, rcost, calls, rmode = await self._research(brand, product, brand_domain, tools)
+            yield self.step("research", "done", "Background research done", model=RESEARCH_MODEL, otari=rmeta,
+                            cost_usd=rcost, data=research, tool_calls=calls, mcp_mode=rmode)
+        except OtariError as e:
+            if _fatal(e):
+                raise
+            note = _degraded("Research", e)
+            self.o.notes.append(note)
+            research, rmeta, rcost, calls, rmode = {}, {}, 0.0, [], "unavailable"
+            yield self.step("research", "done", note, model=RESEARCH_MODEL, data=research, mcp_mode=rmode)
 
         # 7. compute -------------------------------------------------------------
         yield self.step("compute", "running", "Crunching the fine print in Otari's sandbox")
         archived_text, archived_url = await self._archived_policy(policy_url) if policy_url and policy_via != "product_page" else ("", None)
-        stats, ccost = await self._compute(policy_text, archived_text)
+        try:
+            stats, ccost = await self._compute(policy_text, archived_text)
+        except OtariError as e:
+            if _fatal(e):
+                raise
+            note = _degraded("Compute", e)
+            self.o.notes.append(note)
+            stats, ccost = {"error": note}, 0.0
+        if stats.get("error") and not any(n.startswith("Compute unavailable") for n in self.o.notes):
+            self.o.notes.append(f"Compute unavailable: {stats['error']}")
         stats["archived_snapshot"] = archived_url
-        yield self.step("compute", "done", "Fine print, by the numbers", cost_usd=ccost, data=stats)
+        yield self.step("compute", "done",
+                        "Fine print, by the numbers" if not stats.get("error") else
+                        (stats["error"] if str(stats["error"]).startswith("Compute unavailable") else f"Compute unavailable: {stats['error']}"),
+                        cost_usd=ccost, data=stats)
 
         # 8. judge ---------------------------------------------------------------
         async for e in self._judge(brand, product, policy_url, extraction, research, stats, blocked,
@@ -390,7 +420,11 @@ class Review:
             stats = json.loads(out[-1]) if out else {"error": j.get("stderr", "")[:300]}
             stats["sandbox"] = "otari_code_execution"
             stats["otari_request_id"] = meta.get("otari-request-id")
-        except (OtariError, ValueError) as e:
+        except OtariError as e:
+            if _fatal(e):
+                raise
+            stats = {"error": _degraded("Compute", e)}
+        except ValueError as e:
             stats = {"error": str(e)[:300]}
         return stats, 0.0
 

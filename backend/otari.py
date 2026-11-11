@@ -5,6 +5,7 @@ logged, printed or returned to the browser.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from dataclasses import dataclass, field
@@ -36,6 +37,10 @@ class OtariError(Exception):
             return "The Otari workspace is out of credit."
         if self.code == "web_access_disabled":
             return "Web search/fetch is turned off for this Otari workspace."
+        if self.status in (502, 503, 504) or self.code in ("gateway_error", "gateway_timeout"):
+            return f"{self.status} Otari gateway error"
+        if "<" in (self.detail or "") and "</" in self.detail:
+            return f"{self.status} Otari gateway error"
         return self.detail[:300]
 
 
@@ -56,8 +61,18 @@ def _meta(h: httpx.Headers) -> dict:
     return out
 
 
+def _is_html(raw: bytes, headers: httpx.Headers) -> bool:
+    ct = (headers.get("content-type") or "").lower()
+    if "text/html" in ct or "application/xhtml" in ct:
+        return True
+    head = raw.lstrip()[:32].lower()
+    return head.startswith(b"<!doctype html") or head.startswith(b"<html")
+
+
 def _raise(r: httpx.Response, body: bytes | None = None) -> None:
     raw = body if body is not None else r.content
+    if _is_html(raw, r.headers):
+        raise OtariError(r.status_code, "gateway_error", "Otari gateway error", _meta(r.headers))
     try:
         j = json.loads(raw)
         detail = j.get("detail") if isinstance(j, dict) else str(j)
@@ -70,6 +85,8 @@ def _raise(r: httpx.Response, body: bytes | None = None) -> None:
             detail = detail or j["error"].get("message")
     except ValueError:
         code, detail = None, raw[:300].decode(errors="replace")
+        if "<" in detail and "</" in detail:
+            code, detail = "gateway_error", "Otari gateway error"
     raise OtariError(r.status_code, code, str(detail or r.reason_phrase), _meta(r.headers))
 
 
@@ -105,9 +122,30 @@ class Otari:
         self.notes.append("This API key is not a service key, so per-install budgets are off "
                           "(Otari refused the `user` field). See README › Dashboard steps.")
 
+    async def _send(self, method: str, path: str, body: dict | None = None) -> httpx.Response:
+        retried = False
+        while True:
+            try:
+                if method == "POST":
+                    r = await self._c.post(f"{BASE_URL}{path}", headers=self._headers(),
+                                           json=self._with_user(body or {}))
+                else:
+                    r = await self._c.get(f"{BASE_URL}{path}", headers=self._headers())
+            except (httpx.TimeoutException, httpx.ConnectError):
+                if retried:
+                    raise OtariError(504, "gateway_timeout", "Otari gateway error")
+                retried = True
+                await asyncio.sleep(2)
+                continue
+            if r.status_code in (502, 503, 504) and not retried:
+                retried = True
+                await asyncio.sleep(2)
+                continue
+            return r
+
     async def _post(self, path: str, body: dict) -> tuple[dict, dict]:
         for _ in range(2):
-            r = await self._c.post(f"{BASE_URL}{path}", headers=self._headers(), json=self._with_user(body))
+            r = await self._send("POST", path, body)
             if r.status_code >= 400:
                 try:
                     _raise(r)
@@ -120,7 +158,7 @@ class Otari:
         raise RuntimeError("unreachable")
 
     async def get(self, path: str) -> dict:
-        r = await self._c.get(f"{BASE_URL}{path}", headers=self._headers())
+        r = await self._send("GET", path)
         if r.status_code >= 400:
             _raise(r)
         return r.json()
