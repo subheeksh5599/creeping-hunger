@@ -460,8 +460,12 @@ class Review:
         return stats, 0.0
 
     async def _judge(self, brand, product, policy_url, extraction, research, stats, blocked, inj):
-        chain = [JUDGE_POLICY] if JUDGE_POLICY else [BROKEN_MODEL if self.force_fallback else JUDGE_PRIMARY,
-                                                     JUDGE_FALLBACK]
+        if JUDGE_POLICY:
+            # The routing policy fails over inside Otari; the demo switch puts a dead model in front of it
+            # so the fallback is visible on demand.
+            chain = [BROKEN_MODEL, JUDGE_POLICY] if self.force_fallback else [JUDGE_POLICY]
+        else:
+            chain = [BROKEN_MODEL if self.force_fallback else JUDGE_PRIMARY, JUDGE_FALLBACK]
         title = "Writing the verdict"
         yield self.step("judge", "running", title, model=chain[0])
         system = (
@@ -504,7 +508,7 @@ class Review:
                 yield self.step("judge", "done", "Verdict written", model=meta.get("otari-model", model),
                                 otari=meta, cost_usd=cost_of(usage),
                                 fallback_used=(i > 0) or meta.get("otari-fallback") == "true",
-                                attempts=attempts if not JUDGE_POLICY else meta.get("otari-attempt-count"))
+                                attempts=attempts if (not JUDGE_POLICY or i > 0) else meta.get("otari-attempt-count"))
                 yield ev("result", **verdict, brand=brand, product=product, policy_url=policy_url,
                          extraction=extraction, research=research, stats=stats, blocked=blocked)
                 return
