@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: creeping-hunger
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: OTARI_API_KEY
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: MCP_PUBLIC_URL
+        sync: false
+      - key: JUDGE_POLICY
+        sync: false
+  - type: web
+    name: creeping-hunger-mcp
+    runtime: docker
+    plan: free
+    dockerCommand: sh -c "MCP_PORT=$PORT python mcp_server/server.py"

@@ -1,7 +1,7 @@
 [
  {
   "type": "start",
-  "review_id": "ch-35d18e6064ad",
+  "review_id": "ch-82ba6b0e60b7",
   "url": "https://www.fitbit.com/global/us/products/trackers/charge6",
   "models": {
    "scout": "alibaba/qwen3-30b-a3b-instruct-2507",
@@ -47,8 +47,8 @@
    "otari-provider": "nebius",
    "otari-fallback": "false",
    "otari-attempt-count": "1",
-   "otari-request-id": "71763419-c244-4f65-b5bf-36cedc19e05f",
-   "otari-response-duration-ms": "1096"
+   "otari-request-id": "441f5584-eea9-4cb2-9d92-e2dc3c6e35f7",
+   "otari-response-duration-ms": "6710"
   },
   "cost_usd": 7.6e-05,
   "data": {
@@ -72,7 +72,7 @@
   "title": "Found the privacy policy",
   "total_cost_usd": 7.6e-05,
   "url": "https://fitbit.com/privacy",
-  "detail": "35,339 chars via local_fetch",
+  "detail": "35,340 chars via local_fetch",
   "otari": null
  },
  {
@@ -88,9 +88,9 @@
   "id": "guard",
   "status": "done",
   "title": "No prompt injection found",
-  "total_cost_usd": 0.000943,
+  "total_cost_usd": 0.000952,
   "model": "openai/gpt-oss-safeguard-120b",
-  "cost_usd": 0.0008669999999999999,
+  "cost_usd": 0.000876,
   "guard_mode": "local",
   "evidence": null,
   "score": null
@@ -100,7 +100,7 @@
   "id": "extract",
   "status": "running",
   "title": "Extracting what they collect & share",
-  "total_cost_usd": 0.000943,
+  "total_cost_usd": 0.000952,
   "model": "alibaba/qwen3-30b-a3b-instruct-2507"
  },
  {
@@ -108,17 +108,17 @@
   "id": "extract",
   "status": "done",
   "title": "Extracted data practices",
-  "total_cost_usd": 0.001663,
+  "total_cost_usd": 0.001691,
   "model": "alibaba/qwen3-30b-a3b-instruct-2507",
   "otari": {
    "otari-model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
    "otari-provider": "nebius",
    "otari-fallback": "false",
    "otari-attempt-count": "1",
-   "otari-request-id": "1571678c-bb3d-4237-805f-465e6fcfd82c",
-   "otari-response-duration-ms": "13644"
+   "otari-request-id": "4cc8ba45-03de-4f90-afe8-752d4d33c534",
+   "otari-response-duration-ms": "12280"
   },
-  "cost_usd": 0.00072,
+  "cost_usd": 0.000739,
   "data": {
    "data_collected": [
     "name",
@@ -140,12 +140,12 @@
     "female health tracking",
     "alarm settings",
     "messages on discussion boards",
-    "friend contact information",
-    "payment information (name, card number, expiration date, CVV)",
-    "last four digits of card number",
-    "card issuer name and contact information",
+    "friendship data",
+    "contact list (temporary)",
+    "payment information (card number, expiration date, CVV)",
     "billing address",
     "shipping address",
+    "transaction history (not stored)",
     "device data (steps, distance, calories burned, heart rate, sleep stages, active minutes, location)",
     "geolocation data (GPS, Wi-Fi, cell tower IDs)",
     "IP address",
@@ -159,9 +159,17 @@
     "calendar events",
     "communications with coaches",
     "coach notes",
+    "goals and actions recorded with coach",
     "exercise or activity data from third parties",
+    "information from connected accounts (Facebook, Google)",
     "friend list",
-    "profile information shared with Google"
+    "user's name",
+    "user's photo",
+    "user's friends list",
+    "account settings",
+    "notification preferences",
+    "third-party application access",
+    "employer or insurance company information (for wellness programs)"
    ],
    "sensitive_data": [
     "biometrics",
@@ -172,54 +180,58 @@
    "shares_with": [
     "corporate affiliates",
     "service providers",
-    "third-party coaching service providers",
+    "third-party application developers",
     "employers and insurance companies",
     "Google (for joint processing of profile information)",
-    "third-party applications (with user consent)",
-    "payment processors",
+    "third-party payment processors",
     "law enforcement (under legal request)",
     "partners for analytics and advertising"
    ],
    "shares_for_ads": "unclear",
-   "law_enforcement": "We may preserve or disclose information about you to comply with a law, regulation, legal process, or governmental request; to assert legal rights or defend against legal claims; or to prevent, detect, or investigate illegal activity, fraud, abuse, violations of our terms, or threats to the security of the Services. We notify users of legal process unless prohibited by law.",
-   "retention": "We keep account information (name, email, password) for as long as your account exists. Other data (e.g., activity, body, food, sleep) is kept until you delete it or your account. Some data may be retained up to 90 days after deletion for backup and legal reasons. Data is kept for legitimate business interests, legal reasons, and to prevent harm.",
+   "law_enforcement": "We may preserve or disclose information about you to comply with a law, regulation, legal process, or governmental request; to assert legal rights or defend against legal claims; or to prevent, detect, or investigate illegal activity, fraud, abuse, violations of our terms, or threats to the security of the Services. We notify you of legal process seeking access to your information unless prohibited by law.",
+   "retention": "We keep your account information for as long as your account is in existence. We keep exercise or activity data until you delete it or your account. We may preserve data for legal reasons or to prevent harm. Data deletion may take up to 90 days after account deletion.",
    "ai_training": "yes",
    "ai_training_quote": "We use the information to develop new features and Services, which may include generative artificial intelligence models.",
    "user_rights": [
-    "Access and export data",
-    "Edit and delete personal information",
-    "Delete account",
-    "Control visibility of information to other users",
-    "Limit notifications",
-    "Revoke third-party app access",
-    "Unpair device from account",
-    "Object to data use"
+    "access your personal data",
+    "export your data",
+    "edit your personal information",
+    "delete your personal information",
+    "delete your account",
+    "limit visibility of your information to other users",
+    "control notifications",
+    "revoke third-party application access",
+    "unpair your device"
    ],
    "opt_outs": [
-    "Marketing communications via notification preferences",
-    "Service notifications via account settings",
-    "Third-party app access via account settings",
-    "Sharing with employers or wellness programs via account settings",
-    "Advertising via cookie settings and privacy tools"
+    "opt out of marketing communications via notification preferences",
+    "opt out of third-party application access",
+    "opt out of employee wellness program data sharing",
+    "opt out of location tracking via device settings",
+    "opt out of community features visibility"
    ],
    "red_flags": [
-    "Joint processing with Google involving sensitive profile data (name, photo, friends list)",
-    "Data retention up to 90 days after account deletion",
-    "Use of AI models without explicit opt-in",
-    "Data sharing with third-party coaches and employers without clear user control",
-    "Unclear advertising data sharing practices",
-    "Data transfers to countries with potentially weaker privacy laws"
+    {
+     "flag": "Joint processing with Google",
+     "quote": "Fitbit and Google will share with each other limited profile information about their Fitbit users, notably the user\u2019s name, photo, and friends list."
+    },
+    {
+     "flag": "Data retention beyond 30 days",
+     "quote": "It may take up to 90 days to delete all of your information, like the data recorded by your Fitbit device and other data stored in our backup systems."
+    },
+    {
+     "flag": "AI training with health data",
+     "quote": "We use the information to develop new features and Services, which may include generative artificial intelligence models."
+    }
    ],
    "good_signs": [
     "No data sales",
-    "Explicit consent for health data under GDPR",
-    "Transparency about data use and sharing",
-    "Clear user controls and rights",
+    "Clear opt-out mechanisms",
+    "Explicit consent for health data",
     "Compliance with EU-U.S. and Swiss-U.S. Data Privacy Frameworks",
-    "Standard Contractual Clauses for international transfers",
-    "Security measures including TLS encryption",
-    "Right to object and exercise legal rights with joint controllers",
-    "Delayed notice to users in legal requests (except in emergencies)"
+    "Transparency about data sharing with Google",
+    "Right to data export and deletion",
+    "Security measures including TLS encryption"
    ]
   }
  },
@@ -228,7 +240,7 @@
   "id": "research",
   "status": "running",
   "title": "Digging up breaches, ToS;DR grade, and the old Mozilla review",
-  "total_cost_usd": 0.001663,
+  "total_cost_usd": 0.001691,
   "model": "openai/gpt-oss-120b"
  },
  {
@@ -236,15 +248,15 @@
   "id": "research",
   "status": "done",
   "title": "Background research done",
-  "total_cost_usd": 0.001848,
+  "total_cost_usd": 0.001876,
   "model": "openai/gpt-oss-120b",
   "otari": {
    "otari-model": "openai/gpt-oss-120b",
    "otari-provider": "deepinfra",
    "otari-fallback": "false",
    "otari-attempt-count": "1",
-   "otari-request-id": "98ee37c5-2206-4c4a-b1b6-900ab4e27a2a",
-   "otari-response-duration-ms": "19560"
+   "otari-request-id": "c7457132-6a53-4478-b8b1-2d56d89b7499",
+   "otari-response-duration-ms": "18906"
   },
   "cost_usd": 0.000185,
   "data": {
@@ -263,7 +275,7 @@
    "pni_found": true,
    "pni_warning_label": false,
    "pni_people_voted": "Very creepy",
-   "pni_summary": "What could happen if something goes wrong? As of January 14, 2021, Google officially became the owner of Fitbit. That worried many privacy conscious users. However, Google promised that \u201cFitbit users\u2019 health and wellness data won't be used for Google ads and this data will be kept separate from other Google ad data\u201d as part of the deal with global regulators when they bought Fitbit. This is good. And Fitbit seems to do an OK job with privacy and security. It de-identifies the data it collects so it's (hopefully) not personally identifiable. We say hopefully because, depending on the kind of data, it\u2019s been found to be pretty easy to de-anonymize these data sets and track down an individual\u2019s patterns, especially with location data. So, be aware with Fitbit\u2014or any fitness tracker\u2014you are strapping on a device that tracks your location, heart rate, sleep patterns, and more. That's a lot of personal information gathered in one place. What is not good is what can happen with all this very personal health data if others aren't careful. A recent report showed that health data for over 61 million fitness tracker users, including both Fitbit and Apple, was exposed when a third\u2011party company that allowed users to sync their health data from their fitness trackers did not secure the data properly. Personal information such as names, birthdates, weight, height, gender, and geographical location for Fitbit and other fitness\u2011tracker users was left exposed because the company didn't passwo",
+   "pni_summary": "What could happen if something goes wrong? As of January 14, 2021, Google officially became the owner of Fitbit. That worried many privacy conscious users. However, Google promised that \u201cFitbit users\u2019 health and wellness data won't be used for Google ads and this data will be kept separate from other Google ad data\u201d as part of the deal with global regulators when they bought Fitbit. This is good. And Fitbit seems to do an OK job with privacy and security. It de-identifies the data it collects so it's (hopefully) not personally identifiable. We say hopefully because, depending on the kind of data, it\u2019s been found to be pretty easy to de-anonymize these data sets and track down an individual\u2019s patterns, especially with location data. So, be aware with Fitbit\u2014or any fitness tracker\u2014you are strapping on a device that tracks your location, heart rate, sleep patterns, and more. That's a lot of personal information gathered in one place. What is not good is what can happen with all this very personal health data if others aren't careful. A recent report showed that health data for over 61 million fitness tracker users, including both Fitbit and Apple, was exposed when a third-party company that allowed users to sync their health data from their fitness trackers did not secure the data properly. Personal information such as names, birthdates, weight, height, gender, and geographical location for Fitbit and other fitness-tracker users was left exposed because the company didn't passwo",
    "news": [],
    "sources": [
     "https://haveibeenpwned.com",
@@ -298,14 +310,14 @@
   "id": "compute",
   "status": "running",
   "title": "Crunching the fine print in Otari's sandbox",
-  "total_cost_usd": 0.001848
+  "total_cost_usd": 0.001876
  },
  {
   "type": "step",
   "id": "compute",
   "status": "done",
   "title": "Fine print, by the numbers",
-  "total_cost_usd": 0.001848,
+  "total_cost_usd": 0.001876,
   "cost_usd": 0.0,
   "data": {
    "words": 5501,
@@ -343,7 +355,7 @@
     ]
    },
    "sandbox": "otari_code_execution",
-   "otari_request_id": "f5252f95-6015-44a0-99ca-f78454042eb1",
+   "otari_request_id": "bfd5cf0f-d184-41f9-beda-e8ce4080ea46",
    "archived_snapshot": "http://web.archive.org/web/20161128235956/http://www.fitbit.com/privacy"
   }
  },
@@ -352,7 +364,7 @@
   "id": "judge",
   "status": "running",
   "title": "Writing the verdict",
-  "total_cost_usd": 0.001848,
+  "total_cost_usd": 0.001876,
   "model": "meta/llama-3.3-70b-instruct"
  },
  {
@@ -360,15 +372,15 @@
   "id": "judge",
   "status": "running",
   "title": "Writing the verdict",
-  "total_cost_usd": 0.001848,
+  "total_cost_usd": 0.001876,
   "model": "meta.llama3-3-70b-instruct-v1:0",
   "otari": {
    "otari-model": "meta.llama3-3-70b-instruct-v1:0",
    "otari-provider": "bedrock",
    "otari-fallback": "false",
    "otari-attempt-count": "1",
-   "otari-request-id": "6c5322a8-7ae3-44b5-bf8b-5bb744228973",
-   "otari-response-duration-ms": "1284",
+   "otari-request-id": "0ee8aaad-2d17-4318-8645-f8b824c97947",
+   "otari-response-duration-ms": "879",
    "client_attempts": 1
   }
  },
@@ -390,7 +402,11 @@
  },
  {
   "type": "token",
-  "text": " creepy\nHEADLINE: Fit"
+  "text": " creepy\nHEADLINE"
+ },
+ {
+  "type": "token",
+  "text": ": Fit"
  },
  {
   "type": "token",
@@ -398,15 +414,15 @@
  },
  {
   "type": "token",
-  "text": " You"
+  "text": " Your"
  },
  {
   "type": "token",
-  "text": "\n"
+  "text": " Life"
  },
  {
   "type": "token",
-  "text": "WARNING"
+  "text": "\nWARNING"
  },
  {
   "type": "token",
@@ -434,15 +450,15 @@
  },
  {
   "type": "token",
-  "text": " name"
+  "text": " your"
  },
  {
   "type": "token",
-  "text": ", email"
+  "text": " name, email address, password"
  },
  {
   "type": "token",
-  "text": " address, date"
+  "text": ", date"
  },
  {
   "type": "token",
@@ -454,35 +470,39 @@
  },
  {
   "type": "token",
-  "text": " telephone"
+  "text": " telephone number, and profile"
  },
  {
   "type": "token",
-  "text": " number, and sensitive"
+  "text": " photo. They also"
  },
  {
   "type": "token",
-  "text": " health"
+  "text": " collect"
  },
  {
   "type": "token",
-  "text": " and biometric data such"
+  "text": " sensitive"
  },
  {
   "type": "token",
-  "text": " as sleep"
+  "text": " data"
  },
  {
   "type": "token",
-  "text": " logs,"
+  "text": " such as bi"
  },
  {
   "type": "token",
-  "text": " weight logs, and female"
+  "text": "ometrics, health"
  },
  {
   "type": "token",
-  "text": " health tracking."
+  "text": " information"
+ },
+ {
+  "type": "token",
+  "text": ", and location data."
  },
  {
   "type": "token",
@@ -490,35 +510,31 @@
  },
  {
   "type": "token",
-  "text": " data is shared with various"
+  "text": " data is shared with corporate"
  },
  {
   "type": "token",
-  "text": " parties"
+  "text": " affiliates, service providers, third"
  },
  {
   "type": "token",
-  "text": ", including corporate affiliates, service"
+  "text": "-party application developers, employers"
  },
  {
   "type": "token",
-  "text": " providers, third"
+  "text": " and insurance companies, and"
  },
  {
   "type": "token",
-  "text": "-party coaching"
+  "text": " Google for"
  },
  {
   "type": "token",
-  "text": " service providers, employers"
+  "text": " joint processing of profile"
  },
  {
   "type": "token",
-  "text": " and insurance companies, and Google"
- },
- {
-  "type": "token",
-  "text": ". \n"
+  "text": " information. \n"
  },
  {
   "type": "token",
@@ -530,11 +546,7 @@
  },
  {
   "type": "token",
-  "text": " the"
- },
- {
-  "type": "token",
-  "text": " one"
+  "text": " the one"
  },
  {
   "type": "token",
@@ -550,39 +562,15 @@
  },
  {
   "type": "token",
-  "text": " you"
+  "text": " you to comply with a law"
  },
  {
   "type": "token",
-  "text": " to comply with a law,"
+  "text": ", regulation, legal process,"
  },
  {
   "type": "token",
-  "text": " regulation, legal"
- },
- {
-  "type": "token",
-  "text": " process, or governmental request"
- },
- {
-  "type": "token",
-  "text": ", which"
- },
- {
-  "type": "token",
-  "text": " could potentially"
- },
- {
-  "type": "token",
-  "text": " lead"
- },
- {
-  "type": "token",
-  "text": " to the"
- },
- {
-  "type": "token",
-  "text": " misuse of your personal data."
+  "text": " or governmental request."
  },
  {
   "type": "token",
@@ -590,7 +578,11 @@
  },
  {
   "type": "token",
-  "text": "bit has a good track"
+  "text": "bit has a good"
+ },
+ {
+  "type": "token",
+  "text": " track"
  },
  {
   "type": "token",
@@ -602,27 +594,35 @@
  },
  {
   "type": "token",
-  "text": " breaches,"
+  "text": " breaches, but the"
  },
  {
   "type": "token",
-  "text": " and"
+  "text": " fact"
  },
  {
   "type": "token",
-  "text": " it claims"
+  "text": " that they"
  },
  {
   "type": "token",
-  "text": " to be GDPR and"
+  "text": " use"
  },
  {
   "type": "token",
-  "text": " CCPA compliant."
+  "text": " AI"
  },
  {
   "type": "token",
-  "text": " \nTips"
+  "text": " training"
+ },
+ {
+  "type": "token",
+  "text": " with health data is"
+ },
+ {
+  "type": "token",
+  "text": " a concern. \nTips"
  },
  {
   "type": "token",
@@ -642,39 +642,47 @@
  },
  {
   "type": "token",
-  "text": " data,"
+  "text": " information"
  },
  {
   "type": "token",
-  "text": " especially sensitive"
+  "text": ", especially sensitive"
  },
  {
   "type": "token",
-  "text": " health and biometric"
+  "text": " data"
  },
  {
   "type": "token",
-  "text": " information.\n* Review and"
+  "text": " like biometrics and health information"
  },
  {
   "type": "token",
-  "text": " adjust your"
+  "text": ".\n* Review Fit"
  },
  {
   "type": "token",
-  "text": " privacy settings regularly"
+  "text": "bit's privacy policy"
  },
  {
   "type": "token",
-  "text": " to control"
+  "text": " and opt-out mechanisms"
  },
  {
   "type": "token",
-  "text": " who can see your data.\n"
+  "text": " to control how your"
  },
  {
   "type": "token",
-  "text": "* Consider"
+  "text": " data is shared.\n* Consider"
+ },
+ {
+  "type": "token",
+  "text": " using a pseud"
+ },
+ {
+  "type": "token",
+  "text": "onym or limiting"
  },
  {
   "type": "token",
@@ -682,45 +690,45 @@
  },
  {
   "type": "token",
-  "text": " potential risks"
+  "text": " amount"
  },
  {
   "type": "token",
-  "text": " of using a"
+  "text": " of personal information you"
  },
  {
   "type": "token",
-  "text": " fitness tracker that collects"
+  "text": " share"
  },
  {
   "type": "token",
-  "text": " and shares"
+  "text": " on"
  },
  {
   "type": "token",
-  "text": " large"
+  "text": " the"
  },
  {
   "type": "token",
-  "text": " amounts of personal data."
+  "text": " platform."
  },
  {
   "type": "step",
   "id": "judge",
   "status": "done",
   "title": "Verdict written",
-  "total_cost_usd": 0.003499,
+  "total_cost_usd": 0.003567,
   "model": "meta.llama3-3-70b-instruct-v1:0",
   "otari": {
    "otari-model": "meta.llama3-3-70b-instruct-v1:0",
    "otari-provider": "bedrock",
    "otari-fallback": "false",
    "otari-attempt-count": "1",
-   "otari-request-id": "6c5322a8-7ae3-44b5-bf8b-5bb744228973",
-   "otari-response-duration-ms": "1284",
+   "otari-request-id": "0ee8aaad-2d17-4318-8645-f8b824c97947",
+   "otari-response-duration-ms": "879",
    "client_attempts": 1
   },
-  "cost_usd": 0.001651,
+  "cost_usd": 0.001691,
   "fallback_used": false,
   "attempts": 1
  },
@@ -728,9 +736,9 @@
   "type": "result",
   "score": 4,
   "label": "Very creepy",
-  "headline": "Fitbit Tracks You",
+  "headline": "Fitbit Tracks Your Life",
   "warning_label": true,
-  "verdict_md": "Fitbit's Charge 6 Premium Fitness Tracker collects a wide range of personal data, including name, email address, date of birth, gender, height, weight, mobile telephone number, and sensitive health and biometric data such as sleep logs, weight logs, and female health tracking. This data is shared with various parties, including corporate affiliates, service providers, third-party coaching service providers, employers and insurance companies, and Google. \nThe scariest clause is the one that allows Fitbit to preserve or disclose information about you to comply with a law, regulation, legal process, or governmental request, which could potentially lead to the misuse of your personal data. \nFitbit has a good track record with no reported breaches, and it claims to be GDPR and CCPA compliant. \nTips to protect yourself:\n* Be cautious when sharing personal data, especially sensitive health and biometric information.\n* Review and adjust your privacy settings regularly to control who can see your data.\n* Consider the potential risks of using a fitness tracker that collects and shares large amounts of personal data.",
+  "verdict_md": "Fitbit's Charge 6 Premium Fitness Tracker collects a wide range of personal data, including your name, email address, password, date of birth, gender, height, weight, mobile telephone number, and profile photo. They also collect sensitive data such as biometrics, health information, and location data. This data is shared with corporate affiliates, service providers, third-party application developers, employers and insurance companies, and Google for joint processing of profile information. \nThe scariest clause is the one that allows Fitbit to preserve or disclose information about you to comply with a law, regulation, legal process, or governmental request. \nFitbit has a good track record with no reported breaches, but the fact that they use AI training with health data is a concern. \nTips to protect yourself:\n* Be cautious when sharing personal information, especially sensitive data like biometrics and health information.\n* Review Fitbit's privacy policy and opt-out mechanisms to control how your data is shared.\n* Consider using a pseudonym or limiting the amount of personal information you share on the platform.",
   "brand": "Fitbit",
   "product": "Charge 6 Premium Fitness Tracker",
   "policy_url": "https://fitbit.com/privacy",
@@ -755,12 +763,12 @@
     "female health tracking",
     "alarm settings",
     "messages on discussion boards",
-    "friend contact information",
-    "payment information (name, card number, expiration date, CVV)",
-    "last four digits of card number",
-    "card issuer name and contact information",
+    "friendship data",
+    "contact list (temporary)",
+    "payment information (card number, expiration date, CVV)",
     "billing address",
     "shipping address",
+    "transaction history (not stored)",
     "device data (steps, distance, calories burned, heart rate, sleep stages, active minutes, location)",
     "geolocation data (GPS, Wi-Fi, cell tower IDs)",
     "IP address",
@@ -774,9 +782,17 @@
     "calendar events",
     "communications with coaches",
     "coach notes",
+    "goals and actions recorded with coach",
     "exercise or activity data from third parties",
+    "information from connected accounts (Facebook, Google)",
     "friend list",
-    "profile information shared with Google"
+    "user's name",
+    "user's photo",
+    "user's friends list",
+    "account settings",
+    "notification preferences",
+    "third-party application access",
+    "employer or insurance company information (for wellness programs)"
    ],
    "sensitive_data": [
     "biometrics",
@@ -787,54 +803,58 @@
    "shares_with": [
     "corporate affiliates",
     "service providers",
-    "third-party coaching service providers",
+    "third-party application developers",
     "employers and insurance companies",
     "Google (for joint processing of profile information)",
-    "third-party applications (with user consent)",
-    "payment processors",
+    "third-party payment processors",
     "law enforcement (under legal request)",
     "partners for analytics and advertising"
    ],
    "shares_for_ads": "unclear",
-   "law_enforcement": "We may preserve or disclose information about you to comply with a law, regulation, legal process, or governmental request; to assert legal rights or defend against legal claims; or to prevent, detect, or investigate illegal activity, fraud, abuse, violations of our terms, or threats to the security of the Services. We notify users of legal process unless prohibited by law.",
-   "retention": "We keep account information (name, email, password) for as long as your account exists. Other data (e.g., activity, body, food, sleep) is kept until you delete it or your account. Some data may be retained up to 90 days after deletion for backup and legal reasons. Data is kept for legitimate business interests, legal reasons, and to prevent harm.",
+   "law_enforcement": "We may preserve or disclose information about you to comply with a law, regulation, legal process, or governmental request; to assert legal rights or defend against legal claims; or to prevent, detect, or investigate illegal activity, fraud, abuse, violations of our terms, or threats to the security of the Services. We notify you of legal process seeking access to your information unless prohibited by law.",
+   "retention": "We keep your account information for as long as your account is in existence. We keep exercise or activity data until you delete it or your account. We may preserve data for legal reasons or to prevent harm. Data deletion may take up to 90 days after account deletion.",
    "ai_training": "yes",
    "ai_training_quote": "We use the information to develop new features and Services, which may include generative artificial intelligence models.",
    "user_rights": [
-    "Access and export data",
-    "Edit and delete personal information",
-    "Delete account",
-    "Control visibility of information to other users",
-    "Limit notifications",
-    "Revoke third-party app access",
-    "Unpair device from account",
-    "Object to data use"
+    "access your personal data",
+    "export your data",
+    "edit your personal information",
+    "delete your personal information",
+    "delete your account",
+    "limit visibility of your information to other users",
+    "control notifications",
+    "revoke third-party application access",
+    "unpair your device"
    ],
    "opt_outs": [
-    "Marketing communications via notification preferences",
-    "Service notifications via account settings",
-    "Third-party app access via account settings",
-    "Sharing with employers or wellness programs via account settings",
-    "Advertising via cookie settings and privacy tools"
+    "opt out of marketing communications via notification preferences",
+    "opt out of third-party application access",
+    "opt out of employee wellness program data sharing",
+    "opt out of location tracking via device settings",
+    "opt out of community features visibility"
    ],
    "red_flags": [
-    "Joint processing with Google involving sensitive profile data (name, photo, friends list)",
-    "Data retention up to 90 days after account deletion",
-    "Use of AI models without explicit opt-in",
-    "Data sharing with third-party coaches and employers without clear user control",
-    "Unclear advertising data sharing practices",
-    "Data transfers to countries with potentially weaker privacy laws"
+    {
+     "flag": "Joint processing with Google",
+     "quote": "Fitbit and Google will share with each other limited profile information about their Fitbit users, notably the user\u2019s name, photo, and friends list."
+    },
+    {
+     "flag": "Data retention beyond 30 days",
+     "quote": "It may take up to 90 days to delete all of your information, like the data recorded by your Fitbit device and other data stored in our backup systems."
+    },
+    {
+     "flag": "AI training with health data",
+     "quote": "We use the information to develop new features and Services, which may include generative artificial intelligence models."
+    }
    ],
    "good_signs": [
     "No data sales",
-    "Explicit consent for health data under GDPR",
-    "Transparency about data use and sharing",
-    "Clear user controls and rights",
+    "Clear opt-out mechanisms",
+    "Explicit consent for health data",
     "Compliance with EU-U.S. and Swiss-U.S. Data Privacy Frameworks",
-    "Standard Contractual Clauses for international transfers",
-    "Security measures including TLS encryption",
-    "Right to object and exercise legal rights with joint controllers",
-    "Delayed notice to users in legal requests (except in emergencies)"
+    "Transparency about data sharing with Google",
+    "Right to data export and deletion",
+    "Security measures including TLS encryption"
    ]
   },
   "research": {
@@ -853,7 +873,7 @@
    "pni_found": true,
    "pni_warning_label": false,
    "pni_people_voted": "Very creepy",
-   "pni_summary": "What could happen if something goes wrong? As of January 14, 2021, Google officially became the owner of Fitbit. That worried many privacy conscious users. However, Google promised that \u201cFitbit users\u2019 health and wellness data won't be used for Google ads and this data will be kept separate from other Google ad data\u201d as part of the deal with global regulators when they bought Fitbit. This is good. And Fitbit seems to do an OK job with privacy and security. It de-identifies the data it collects so it's (hopefully) not personally identifiable. We say hopefully because, depending on the kind of data, it\u2019s been found to be pretty easy to de-anonymize these data sets and track down an individual\u2019s patterns, especially with location data. So, be aware with Fitbit\u2014or any fitness tracker\u2014you are strapping on a device that tracks your location, heart rate, sleep patterns, and more. That's a lot of personal information gathered in one place. What is not good is what can happen with all this very personal health data if others aren't careful. A recent report showed that health data for over 61 million fitness tracker users, including both Fitbit and Apple, was exposed when a third\u2011party company that allowed users to sync their health data from their fitness trackers did not secure the data properly. Personal information such as names, birthdates, weight, height, gender, and geographical location for Fitbit and other fitness\u2011tracker users was left exposed because the company didn't passwo",
+   "pni_summary": "What could happen if something goes wrong? As of January 14, 2021, Google officially became the owner of Fitbit. That worried many privacy conscious users. However, Google promised that \u201cFitbit users\u2019 health and wellness data won't be used for Google ads and this data will be kept separate from other Google ad data\u201d as part of the deal with global regulators when they bought Fitbit. This is good. And Fitbit seems to do an OK job with privacy and security. It de-identifies the data it collects so it's (hopefully) not personally identifiable. We say hopefully because, depending on the kind of data, it\u2019s been found to be pretty easy to de-anonymize these data sets and track down an individual\u2019s patterns, especially with location data. So, be aware with Fitbit\u2014or any fitness tracker\u2014you are strapping on a device that tracks your location, heart rate, sleep patterns, and more. That's a lot of personal information gathered in one place. What is not good is what can happen with all this very personal health data if others aren't careful. A recent report showed that health data for over 61 million fitness tracker users, including both Fitbit and Apple, was exposed when a third-party company that allowed users to sync their health data from their fitness trackers did not secure the data properly. Personal information such as names, birthdates, weight, height, gender, and geographical location for Fitbit and other fitness-tracker users was left exposed because the company didn't passwo",
    "news": [],
    "sources": [
     "https://haveibeenpwned.com",
@@ -897,20 +917,22 @@
     ]
    },
    "sandbox": "otari_code_execution",
-   "otari_request_id": "f5252f95-6015-44a0-99ca-f78454042eb1",
+   "otari_request_id": "bfd5cf0f-d184-41f9-beda-e8ce4080ea46",
    "archived_snapshot": "http://web.archive.org/web/20161128235956/http://www.fitbit.com/privacy"
   },
   "blocked": false
  },
  {
   "type": "done",
-  "review_id": "ch-35d18e6064ad",
-  "total_cost_usd": 0.003499,
-  "seconds": 58.3,
+  "review_id": "ch-82ba6b0e60b7",
+  "total_cost_usd": 0.003567,
+  "seconds": 59.7,
   "notes": [
    "Otari web search/fetch is disabled for this workspace (reason: workspace_disabled); pages were read with the backend's own HTTP client instead. Enable: Otari dashboard \u203a Tools \u203a Web search.",
    "This API key is not a service key, so per-install budgets are off (Otari refused the `user` field). See README \u203a Dashboard steps.",
    "MCP_PUBLIC_URL is not set, so the MCP tools ran locally instead of inside Otari's tool loop."
-  ]
+  ],
+  "end_user": "ch-install:cli-test",
+  "end_user_accepted": false
  }
 ]

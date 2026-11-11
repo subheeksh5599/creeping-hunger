@@ -1,0 +1,6 @@
+.git
+.env
+dashboard/node_modules
+dashboard/dist
+data
+**/__pycache__
