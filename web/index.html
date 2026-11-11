@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creeping Hunger — *Privacy Not Included, revived</title>
+<link rel="stylesheet" href="/ui/ui.css"><style>body{max-width:560px;margin:0 auto}</style></head>
+<body>
+<header><img src="/ui/icon.svg" alt="" width="34"><div><h1>Creeping Hunger</h1><p class="tag">*Privacy Not Included, revived · open-weight models via Mozilla.ai Otari</p></div></header>
+<div class="controls">
+  <input id="url" placeholder="Paste a product page URL" value="https://www.fitbit.com/global/us/products/trackers/charge6">
+  <button id="go">Review it</button>
+  <div class="small">Try: <a href="#" data-u="https://www.fitbit.com/global/us/products/trackers/charge6">Fitbit Charge 6</a> ·
+   <a href="#" data-u="hostile">🧪 hostile test page</a></div>
+  <label class="small"><input type="checkbox" id="fallback" style="width:auto"> force judge fallback (demo)</label>
+</div>
+<main id="app"></main>
+<script src="/ui/ui.js"></script>
+<script>
+  let id = localStorage.getItem("chInstall"); if (!id) { id = crypto.randomUUID(); localStorage.setItem("chInstall", id); }
+  document.querySelectorAll("[data-u]").forEach(a => a.onclick = (e) => { e.preventDefault();
+    document.getElementById("url").value = a.dataset.u === "hostile" ? location.origin + "/hostile/" : a.dataset.u; });
+  document.getElementById("go").onclick = () => CH.run({ backend: location.origin, url: document.getElementById("url").value.trim(),
+    install_id: id, force_fallback: document.getElementById("fallback").checked,
+    root: document.getElementById("app"), button: document.getElementById("go") });
+</script></body></html>

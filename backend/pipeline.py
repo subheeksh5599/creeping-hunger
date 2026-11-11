@@ -227,7 +227,8 @@ class Review:
         yield self.step("guard", "running", "Checking the page for prompt injection", model=guard.GUARD_MODEL)
         public = env_public("PUBLIC_BASE_URL")
         # also scan the product page itself: injections often live there
-        page_check = await guard.validate(f"{guard.DOC_START}\n{text[:12000]}\n{guard.DOC_END}", self.o)
+        scan = html_to_text(html) if html else text  # html text also catches display:none tricks
+        page_check = await guard.validate(f"{guard.DOC_START}\n{scan[:12000]}\n{guard.DOC_END}", self.o)
         if not page_check["valid"]:
             injected_into_page = page_check
         guard_entry = None
