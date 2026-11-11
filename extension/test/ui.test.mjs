@@ -175,7 +175,7 @@ test("blocked review shows the shield and skips the collect card", () => {
   events[3] = { ...events[3], blocked: true, extraction: { blocked: true, reason: "prompt_injection" } };
   const h = html(events);
   assert.match(h, /tried to give our AI orders/);
-  assert.doesNotMatch(h, /What they collect/);
+  assert.doesNotMatch(h, /What the policy says/);
 });
 
 test("judge failures list each call in order", () => {
