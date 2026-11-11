@@ -175,7 +175,7 @@ class Review:
             if e["type"] == "start":
                 yield {**e, "cached_from": summary["id"], "cached_at": summary["created_at"]}
             elif e["type"] == "done":
-                yield {**e, "cached": True, "original_seconds": e.get("seconds"),
+                yield {**e, "cached": True, "original_seconds": e.get("seconds"), "end_user": self.o.end_user,
                        "seconds": round(time.time() - t0, 2), "budget": budget}
             else:
                 yield e
@@ -187,6 +187,7 @@ class Review:
                          "researcher": RESEARCH_MODEL,
                          "judge": JUDGE_POLICY or f"{JUDGE_PRIMARY} → {JUDGE_FALLBACK}"})
         tools = await self._tool_availability()
+        budget0 = await self.o.end_user_budget()
 
         # 1. read the page ------------------------------------------------------
         yield self.step("read", "running", "Reading the product page")
@@ -362,10 +363,11 @@ class Review:
         async for e in self._judge(brand, product, policy_url, extraction, research, stats, blocked,
                                    injected_into_page):
             yield e
-        yield ev("done", review_id=self.review_id, total_cost_usd=round(self.total_cost, 6),
+        budget = await self.o.end_user_budget()
+        billed = round(budget["spend_usd"] - budget0["spend_usd"], 6) if budget and budget0 else None
+        yield ev("done", review_id=self.review_id, total_cost_usd=round(self.total_cost, 6), billed_usd=billed,
                  seconds=round(time.time() - t0, 1), notes=list(dict.fromkeys(self.o.notes)),
-                 end_user=self.o.end_user, end_user_accepted=self.o.send_end_user,
-                 budget=await self.o.end_user_budget())
+                 end_user=self.o.end_user, end_user_accepted=self.o.send_end_user, budget=budget)
 
     async def _tool_availability(self) -> dict:
         try:
@@ -489,6 +491,7 @@ class Review:
             chain = [BROKEN_MODEL, JUDGE_POLICY] if self.force_fallback else [JUDGE_POLICY]
         else:
             chain = [BROKEN_MODEL if self.force_fallback else JUDGE_PRIMARY, JUDGE_FALLBACK]
+        policy = JUDGE_POLICY or None
         title = "Writing the verdict"
         yield self.step("judge", "running", title, model=chain[0])
         system = (
@@ -530,8 +533,8 @@ class Review:
                 verdict = parse_verdict(buf)
                 judge = {"model": meta.get("otari-model", model), "provider": meta.get("otari-provider"),
                          "fallback_used": (i > 0) or meta.get("otari-fallback") == "true",
-                         "attempts": attempts if not JUDGE_POLICY else meta.get("otari-attempt-count"),
-                         "policy": JUDGE_POLICY or None, "forced": self.force_fallback}
+                         "attempts": attempts if (not policy or i > 0) else meta.get("otari-attempt-count"),
+                         "policy": policy, "forced": self.force_fallback}
                 yield self.step("judge", "done", "Verdict written", model=judge["model"],
                                 otari=meta, cost_usd=cost_of(usage),
                                 fallback_used=judge["fallback_used"], attempts=judge["attempts"])

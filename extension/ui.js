@@ -25,6 +25,27 @@ const CH = (() => {
     return out.join("");
   }
 
+  const secs = (n) => n >= 60 ? `${Math.floor(n / 60)} min ${Math.round(n % 60)} s` : `${n} s`;
+  const day = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "";
+
+  function judgeLine(j) {
+    if (!j) return "";
+    const fb = j.fallback_used;
+    return `<div class="answered"><span class="small">Verdict by</span> <span class="chip model">${esc(j.model)}</span>
+      ${j.policy ? `<span class="chip" title="Otari routing policy">policy ${esc(j.policy)}</span>` : ""}
+      <span class="chip ${fb ? "warn" : "ok"}" title="Otari-Fallback">${fb ? "fallback model answered" : "primary model answered"}</span>
+      ${j.attempts && Number(j.attempts) > 1 ? `<span class="chip">${esc(j.attempts)} attempts</span>` : ""}</div>`;
+  }
+
+  function budgetCard(b, endUser, ok) {
+    if (!b && !endUser) return "";
+    if (!b) return `<section class="card"><h3>Your free budget</h3><p class="small">${ok ? "Per-user budget on for this install." : "Per-user budget off: Otari refused the user field (needs a service key)."}</p></section>`;
+    const pct = Math.min(100, Math.round((100 * b.spend_usd) / (b.limit_usd || 1)));
+    return `<section class="card"><h3>Your free budget <span class="chip">Otari per-user budget</span></h3>
+      <div class="bar"><div style="width:${pct}%" class="${pct >= 90 ? "hot" : ""}"></div></div>
+      <p class="small"><b>$${b.spend_usd.toFixed(4)}</b> of $${b.limit_usd.toFixed(2)} used by this browser${b.resets_at ? `, resets ${esc(day(b.resets_at))}` : ""}.${b.blocked ? " Blocked." : ""}</p></section>`;
+  }
+
   function meter(score) {
     const segs = [1, 2, 3, 4, 5].map((i) => `<div class="seg s${i} ${score && i <= score ? "on" : ""}"></div>`).join("");
     return `<div class="meter">${segs}</div><div class="face">${score ? FACES[score] : "🤔"}</div>`;
@@ -45,8 +66,11 @@ const CH = (() => {
     const st7 = st.steps.compute?.data;
     const ex = r?.extraction || {};
     const rs = r?.research || {};
+    const cached = st.cached;
     return `
       ${st.error ? `<div class="error">${esc(st.error)}</div>` : ""}
+      ${st.error && st.budget ? budgetCard(st.budget) : ""}
+      ${cached ? `<div class="cached"><span>Saved review from ${esc(new Date(cached.at * 1000).toLocaleString())}. Loaded instantly, no new Otari calls.</span>${st.canRefresh ? `<button class="link" data-action="fresh">Run it again live</button>` : ""}</div>` : ""}
       <section class="card verdict ${score ? "s" + score : ""}">
         ${meter(score)}
         <div class="label">${score ? `${score}/5 · ${esc(r.label || LABELS[score])}` : st.running ? "Sniffing around…" : "Ready when you are"}</div>
@@ -54,8 +78,12 @@ const CH = (() => {
         ${r?.warning_label ? `<div class="pni">⚠️ *Privacy Not Included</div>` : ""}
         ${r?.blocked ? `<div class="pni">🛡️ This page tried to give our AI orders. Blocked.</div>` : ""}
         <div class="body">${md(r?.verdict_md || st.stream.replace(/^[\s\S]*?---/, "") || "")}</div>
+        ${judgeLine(r?.judge)}
+        ${st.seconds != null && r ? `<p class="small receipt">${cached ? `First run took ${secs(cached.seconds)}${st.billed != null ? ` and Otari billed ${usd(st.billed)}` : ""}. This visit: ${st.seconds} s, $0.` : `Reviewed in ${secs(st.seconds)}. ${st.billed != null ? `Otari billed ${usd(st.billed)} (models ${usd(st.total)}, the rest search and fetch).` : `Model cost ${usd(st.total) || "$0"}.`}`}</p>` : ""}
       </section>
-      ${st.steps.read ? `<section class="card"><h3>How we got here <span class="total">${usd(st.total)} total</span></h3><ol class="steps">${steps}</ol>${st.endUser ? `<div class="chips"><span class="chip ${st.endUserOk ? "" : "warn"}" title="Otari user field">Otari user ${esc(st.endUser.slice(0, 22))}: ${st.endUserOk ? "per-user budget on" : "refused (needs service key)"}</span></div>` : ""}</section>` : ""}
+      ${(r?.tips || []).length ? `<section class="card tips"><h3>Tips to protect yourself</h3><ul>${r.tips.map((t) => `<li>${md(t).replace(/^<p>|<\/p>$/g, "")}</li>`).join("")}</ul></section>` : ""}
+      ${budgetCard(st.budget, st.endUser, st.endUserOk)}
+      ${st.steps.read ? `<section class="card"><h3>How we got here <span class="total">${usd(st.total)} in model calls</span></h3><ol class="steps">${steps}</ol>${st.endUser ? `<div class="chips"><span class="chip ${st.endUserOk ? "" : "warn"}" title="Otari user field">Otari user ${esc(st.endUser.slice(0, 22))}: ${st.endUserOk ? "per-user budget on" : "refused (needs service key)"}</span></div>` : ""}</section>` : ""}
       ${st7 && !st7.error ? `<section class="card"><h3>Fine print, by the numbers <span class="chip">Otari code execution</span></h3>
         <div class="stats"><div><b>${st7.reading_minutes}</b> min to read</div><div><b>${st7.fk_grade}</b> grade level</div>
         <div><b>${st7.clause_counts?.share ?? 0}</b> “share”</div><div><b>${st7.clause_counts?.third_party ?? 0}</b> “third party”</div>
@@ -63,7 +91,7 @@ const CH = (() => {
         ${st7.diff_vs_archive ? `<p class="small">vs archived policy: ${Math.round(st7.diff_vs_archive.similarity * 100)}% similar, +${st7.diff_vs_archive.added_sentences} / −${st7.diff_vs_archive.removed_sentences} sentences</p>` : ""}</section>` : ""}
       ${r && !ex.blocked ? `<section class="card"><h3>What they collect</h3>
         <p class="small"><b>Sells data:</b> ${esc(ex.sells_data)} · <b>Ads sharing:</b> ${esc(ex.shares_for_ads)} · <b>AI training:</b> ${esc(ex.ai_training)}</p>
-        ${(ex.red_flags || []).length ? `<p class="small"><b>Red flags</b></p><ul class="small">${ex.red_flags.slice(0, 6).map((x) => typeof x === "string" ? `<li>${esc(x)}</li>` : `<li>${esc(x.flag)}${x.quote ? `<br><q>${esc(x.quote)}</q>${x.quote_verified === false ? ` <span class="chip warn">paraphrase, not found verbatim</span>` : ""}` : ""}</li>`).join("")}</ul>` : ""}
+        ${(ex.red_flags || []).length ? `<p class="small"><b>Red flags</b></p><ul class="small">${ex.red_flags.slice(0, 6).map((x) => typeof x === "string" ? `<li>${esc(x)}</li>` : `<li>${esc(x.flag)}${x.quote ? `<br><q>${esc(x.quote)}</q> ${x.quote_verified === false ? `<span class="chip warn">paraphrase, not found verbatim</span>` : x.quote_verified ? `<span class="chip ok">found in the policy</span>` : ""}` : ""}</li>`).join("")}</ul>` : ""}
         ${(ex.data_collected || []).length ? `<details class="small"><summary>Data collected (${ex.data_collected.length})</summary>${esc(ex.data_collected.join(", "))}</details>` : ""}</section>` : ""}
       ${r ? `<section class="card"><h3>Track record <span class="chip">MCP</span></h3>
         <p class="small"><b>Breaches:</b> ${(rs.breaches || []).length ? rs.breaches.map((b) => esc(`${b.name} (${b.date})`)).join(", ") : "none on record"}</p>
@@ -77,8 +105,12 @@ const CH = (() => {
     if (e.type === "step") { st.steps[e.id] = { ...(st.steps[e.id] || {}), ...e }; st.total = e.total_cost_usd; }
     else if (e.type === "token") st.stream += e.text;
     else if (e.type === "result") st.result = e;
-    else if (e.type === "error") st.error = e.message;
-    else if (e.type === "done") { st.notes = e.notes || []; st.total = e.total_cost_usd; st.endUser = e.end_user; st.endUserOk = e.end_user_accepted; }
+    else if (e.type === "start" && e.cached_from) st.cached = { at: e.cached_at };
+    else if (e.type === "error") { st.error = e.message; st.budget = e.budget; }
+    else if (e.type === "done") {
+      Object.assign(st, { notes: e.notes || [], total: e.total_cost_usd, endUser: e.end_user, endUserOk: e.end_user_accepted, seconds: e.seconds, budget: e.budget, billed: e.billed_usd });
+      if (e.cached && st.cached) st.cached.seconds = e.original_seconds;
+    }
   }
 
   function replay(events, root) {
@@ -87,15 +119,17 @@ const CH = (() => {
     root.innerHTML = render(st);
   }
 
-  async function run({ backend, url, page_text, page_html, install_id, force_fallback, root, button }) {
-    const st = { steps: {}, stream: "", total: 0, running: true, result: null, error: null, notes: [] };
+  async function run(opts) {
+    const { backend, url, page_text, page_html, install_id, force_fallback, fresh, root, button } = opts;
+    const st = { steps: {}, stream: "", total: 0, running: true, result: null, error: null, notes: [], canRefresh: true };
     const draw = () => (root.innerHTML = render(st));
+    root.onclick = (ev) => { if (ev.target.closest("[data-action=fresh]") && !st.running) run({ ...opts, fresh: true }); };
     if (button) button.disabled = true;
     draw();
     try {
       const resp = await fetch(backend.replace(/\/$/, "") + "/api/review", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, page_text, page_html, install_id, force_fallback }),
+        body: JSON.stringify({ url, page_text, page_html, install_id, force_fallback, fresh: !!fresh }),
       });
       if (!resp.ok) throw new Error(`Backend answered ${resp.status}`);
       const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = "";

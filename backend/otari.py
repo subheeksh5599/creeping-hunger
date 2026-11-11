@@ -220,9 +220,9 @@ class Otari:
             rows = await self.get(f"/end-users?external_id={self.end_user}")
         except (OtariError, ValueError):
             return None
-        row = rows[0] if isinstance(rows, list) and rows else None
-        if not row:
+        if not isinstance(rows, list):
             return None
+        row = rows[0] if rows else {}
         limit = float(os.getenv("END_USER_BUDGET_USD", "0.05"))
         spend = float(row.get("spend") or 0)
         return {"spend_usd": round(spend, 6), "limit_usd": limit, "remaining_usd": round(max(0.0, limit - spend), 6),

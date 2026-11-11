@@ -20,3 +20,8 @@ h2{font-size:17px;margin:6px 0}h3{font-size:13px;margin:0 0 8px;text-transform:u
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}.stats div{background:#2a2640;border-radius:8px;padding:6px;font-size:11px;color:var(--mut);text-align:center}
 .stats b{display:block;font-size:16px;color:var(--fg)}.error{background:#3a1a24;color:#ffb3c1;border-radius:10px;padding:10px;margin:8px 0}
 q{color:#e8e2ff;font-style:italic}.disclaimer{margin:10px 2px}
+.chip.ok{background:#1d4434;color:#a6f0c6}.answered{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:8px}
+.receipt{margin:8px 0 0}.cached{display:flex;flex-direction:column;gap:6px;background:#1d2f3a;color:#bfe3ff;border-radius:10px;padding:10px;margin:8px 0;font-size:12px}
+button.link{background:none;color:var(--acc);padding:0;font-size:12px;text-align:left;text-decoration:underline}
+.tips{background:#1f2a24}.tips ul{margin:0;padding-left:18px}.tips li{margin:4px 0}
+.bar{height:8px;background:#2f2b45;border-radius:99px;overflow:hidden;margin:4px 0 6px}.bar div{height:100%;background:#3ddc97}.bar div.hot{background:#ff4d6d}
