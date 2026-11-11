@@ -155,40 +155,35 @@ const CH = (() => {
     return `<p class="small receipt">${cached ? `First run took ${secs(cached.seconds)}${st.billed != null ? ` and Otari billed ${usd(st.billed)}` : ""}. This visit: ${st.seconds} s, $0.` : `Reviewed in ${secs(st.seconds)}. ${st.billed != null ? `Otari billed ${usd(st.billed)} (models ${usd(st.total)}, the rest search and fetch).` : `Model cost ${usd(st.total) || "$0"}.`}`}</p>`;
   }
 
-  function render(st) {
-    const r = st.result;
-    const score = r?.score;
-    const st7 = st.steps.compute?.data;
+  function firstParagraph(text) {
+    const paras = String(text || "").split(/\n\s*\n|\n/).map((l) => l.trim()).filter((l) => l && !/^#+\s/.test(l) && !/^[-*•]\s/.test(l));
+    const first = paras[0] || "";
+    const sentences = first.match(/[^.!?]+[.!?]+(\s|$)/g);
+    return sentences && sentences.length > 2 ? sentences.slice(0, 2).join("").trim() : first;
+  }
+
+  function policySection(r, ex) {
+    if (!r || ex.blocked) return "";
+    const flags = ex.red_flags || [];
+    return `<section><h3>What the policy says</h3>
+      <dl class="facts compact"><div class="fact"><dt>Sells data</dt><dd>${esc(ex.sells_data)}</dd></div><div class="fact"><dt>Ads sharing</dt><dd>${esc(ex.shares_for_ads)}</dd></div><div class="fact"><dt>AI training</dt><dd>${esc(ex.ai_training)}</dd></div></dl>
+      ${flags.length ? `<h4>Red flags</h4><ul class="flags">${flags.slice(0, 6).map((x) => redFlag(x, r.policy_url)).join("")}</ul>` : ""}
+      ${(ex.data_collected || []).length ? `<p class="small"><b>Data collected (${ex.data_collected.length}):</b> ${esc(ex.data_collected.join(", "))}</p>` : ""}</section>`;
+  }
+
+  function details(st, r, st7) {
     const ex = r?.extraction || {};
     const rs = r?.research || {};
-    const cached = st.cached;
-    const flags = ex.red_flags || [];
-    const status = score ? "" : st.running ? "Reviewing this page…" : st.error ? "No review yet" : "Ready when you are";
-    const open = st.running || st.otariOpen;
-    return `
-      ${st.error ? `<div class="notice bad" role="alert">${esc(st.error)}</div>` : ""}
-      ${st.error && st.budget ? budgetBlock(st.budget) : ""}
-      ${cached ? `<div class="notice"><p class="small">Saved review from ${esc(new Date(cached.at * 1000).toLocaleString())}. Loaded instantly, no new Otari calls.</p>${st.canRefresh ? `<button class="link" data-action="fresh">Run it again live</button>` : ""}</div>` : ""}
-      <section class="verdict ${severity(score)}">
-        ${score ? `<p class="score"><b>${score}/5</b><span>${esc(r.label || LABELS[score])}</span></p>` : `<p class="status">${status}</p>`}
-        ${meter(score)}
-        ${r?.headline ? `<h2>${esc(r.headline)}</h2>` : ""}
-        ${r?.warning_label ? `<p class="flag bad">Gets the *Privacy Not Included warning label</p>` : ""}
-        ${r?.blocked ? `<div class="notice bad"><p><b>Prompt injection blocked</b></p><p class="small">This page tried to give our AI orders, and they were ignored.</p></div>` : ""}
-        <div class="body">${md(r?.verdict_md || st.stream.replace(/^[\s\S]*?---/, "") || "")}</div>
-        ${judgeLine(r?.judge)}
-      </section>
+    if (!r && !st.steps.read) return "";
+    return `<details class="more" ${st.detailsOpen ? "open" : ""}><summary>Details</summary>
+      ${r ? `<section><h3>Full verdict</h3>${r.warning_label ? `<p class="flag bad">Gets the *Privacy Not Included warning label</p>` : ""}<div class="body">${md(r.verdict_md || "")}</div>${judgeLine(r.judge)}</section>` : ""}
       ${scoreBox(r, st7)}
-      ${r && !ex.blocked ? `<section><h3>What the policy says</h3>
-        <dl class="facts compact"><div class="fact"><dt>Sells data</dt><dd>${esc(ex.sells_data)}</dd></div><div class="fact"><dt>Ads sharing</dt><dd>${esc(ex.shares_for_ads)}</dd></div><div class="fact"><dt>AI training</dt><dd>${esc(ex.ai_training)}</dd></div></dl>
-        ${flags.length ? `<h4>Red flags</h4><ul class="flags">${flags.slice(0, 6).map((x) => redFlag(x, r.policy_url)).join("")}</ul>` : ""}
-        ${(ex.data_collected || []).length ? `<details class="small"><summary>Data collected (${ex.data_collected.length})</summary><p>${esc(ex.data_collected.join(", "))}</p></details>` : ""}</section>` : ""}
-      ${(r?.tips || []).length ? `<section><h3>Tips to protect yourself</h3><ul class="tips">${r.tips.map((t) => `<li>${md(t).replace(/^<p>|<\/p>$/g, "")}</li>`).join("")}</ul></section>` : ""}
+      ${policySection(r, ex)}
       ${r ? `<section><h3>Track record</h3><p class="small muted">Looked up through the MCP server.</p>
         <dl class="facts">${trackRecord(rs)}${archiveRow(st7)}</dl>
         ${rs.pni_stale ? `<p class="small warn">That archived review is over a year old or undated. Mozilla says archived reviews reflect the policy when they were written, so trust today's policy above.</p>` : ""}</section>` : ""}
       ${r ? guardCard(st) : ""}
-      ${st.steps.read ? `<details class="otari" ${open ? "open" : ""}><summary>How we got here<span class="total">${usd(st.total)}${st.total ? " in model calls" : ""}</span></summary>
+      ${st.steps.read ? `<section><h3>How we got here<span class="total">${usd(st.total)}${st.total ? " in model calls" : ""}</span></h3>
         ${receipt(st, r)}
         <ol class="steps">${Object.values(st.steps).map(stepRow).join("")}</ol>
         ${r ? stepModels(st) : ""}
@@ -196,8 +191,31 @@ const CH = (() => {
         ${budgetBlock(st.budget, st.endUser, st.endUserOk)}
         ${st.reviewId && st.endUser ? `<p class="small otari-ids">Find this run in Otari: end user <code>${esc(st.endUser)}</code>, conversation <code>${esc(st.reviewId)}</code></p>` : ""}
         ${(st.notes || []).length ? `<div class="block notes"><h4>Setup notes</h4><ul class="small">${st.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul></div>` : ""}
-      </details>` : ""}
-      <p class="small muted disclaimer">Not a Mozilla review. Not legal advice. Quotes marked “found in the policy” are word for word from it; the numbers come from code, not a model. The words come from models and can be wrong.</p>`;
+      </section>` : ""}
+      <p class="small muted disclaimer">Not a Mozilla review. Not legal advice. Quotes marked “found in the policy” are word for word from it; the numbers come from code, not a model. The words come from models and can be wrong.</p>
+    </details>`;
+  }
+
+  function render(st) {
+    const r = st.result;
+    const score = r?.score;
+    const st7 = st.steps.compute?.data;
+    const cached = st.cached;
+    const current = Object.values(st.steps).filter((s) => s.status === "running").pop();
+    const said = r ? firstParagraph(r.verdict_md) : st.stream.includes("---") ? firstParagraph(st.stream.replace(/^[\s\S]*?---/, "")) : "";
+    return `
+      ${st.error ? `<div class="notice bad" role="alert">${esc(st.error)}</div>` : ""}
+      ${st.error && st.budget ? budgetBlock(st.budget) : ""}
+      ${cached ? `<p class="small muted cached">Saved review from ${esc(new Date(cached.at * 1000).toLocaleString())}. Loaded instantly, no new Otari calls.${st.canRefresh ? ` <button class="link" data-action="fresh">Run it again live</button>` : ""}</p>` : ""}
+      <section class="verdict ${severity(score)}">
+        ${score ? `<p class="score"><b>${score * 20}%</b><span>${esc(r.label || LABELS[score])}</span><span class="out-of">${score}/5</span></p>` : `<p class="status">${st.running ? "Reviewing this page…" : st.error ? "No review yet" : "Open a product page and press Review"}</p>`}
+        ${meter(score)}
+        ${st.running && current ? `<p class="small muted progress">${esc(current.title)}</p>` : ""}
+        ${r?.blocked ? `<div class="notice bad"><p><b>Prompt injection blocked</b></p><p class="small">This page tried to give our AI orders, and they were ignored.</p></div>` : ""}
+        ${r?.headline ? `<h2>${esc(r.headline)}</h2>` : ""}
+        ${said ? `<p class="said">${md(said).replace(/^<p>|<\/p>$/g, "")}</p>` : ""}
+      </section>
+      ${details(st, r, st7)}`;
   }
 
   function apply(st, e) {
@@ -215,8 +233,8 @@ const CH = (() => {
   function bindActions(root, st, draw, opts) {
     const { backend, install_id } = opts;
     root.onclick = async (ev) => {
-      const summary = ev.target.closest("details.otari > summary");
-      if (summary) { st.otariOpen = !summary.parentElement.open; return; }
+      const summary = ev.target.closest("details.more > summary");
+      if (summary) { st.detailsOpen = !summary.parentElement.open; return; }
       if (ev.target.closest("[data-action=fresh]") && !st.running) return run({ ...opts, fresh: true });
       if (!ev.target.closest("[data-action=guard]") || !backend) return;
       st.pasteText = root.querySelector("#ch-paste")?.value || "";

@@ -2,15 +2,13 @@
 <html lang="en"><head><meta charset="utf-8"><title>Creeping Hunger</title>
 <link rel="stylesheet" href="ui.css"></head>
 <body>
-<header><img src="icon.svg" alt=""><div><h1>Creeping Hunger</h1><p class="tag">A Privacy Not Included style review of the page you're on</p></div></header>
-<div class="controls">
-  <button id="go">Review this page</button>
-  <label class="small"><input type="checkbox" id="fallback"> Force the judge fallback (demo)</label>
-  <details class="small"><summary>Settings</summary>
-    <label>Backend URL <input id="backend" value="https://creeping-hunger.onrender.com" title="Public backend by default. For a local backend use http://127.0.0.1:8787"></label>
-  </details>
-</div>
+<header><img src="icon.svg" alt=""><h1>Creeping Hunger</h1></header>
+<div class="controls"><button id="go">Review this page</button></div>
 <main id="app"></main>
+<details class="small settings"><summary>Settings</summary>
+  <label><input type="checkbox" id="fallback"> Force the judge fallback (demo)</label>
+  <label class="stack">Backend URL <input id="backend" value="https://creeping-hunger.onrender.com" title="Public backend by default. For a local backend use http://127.0.0.1:8787"></label>
+</details>
 <script src="ui.js"></script>
 <script src="sidebar.js"></script>
 </body></html>
