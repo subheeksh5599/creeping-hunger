@@ -61,6 +61,22 @@ async def review_detail(review_id: str):
     return r if r else JSONResponse({"detail": "not found"}, status_code=404)
 
 
+class GuardIn(BaseModel):
+    text: str
+    install_id: str = "anon"
+
+
+@app.post("/api/guard-check")
+async def guard_check(body: GuardIn):
+    """The paste box: runs only the guardrail on pasted text. Nothing is re-scored either way."""
+    o = Otari(end_user=f"ch-install:{body.install_id[:64]}", conversation_id="ch-guard-check")
+    try:
+        res = await guard.validate(f"{guard.DOC_START}\n{body.text[:12000]}\n{guard.DOC_END}", o)
+    finally:
+        await o.aclose()
+    return {k: res[k] for k in ("valid", "reason_code", "explanation", "heuristic_hits", "score", "model", "cost_usd")}
+
+
 @app.get("/api/budget/{install_id}")
 async def budget(install_id: str):
     o = Otari(end_user=f"ch-install:{install_id}")

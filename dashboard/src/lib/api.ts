@@ -64,10 +64,17 @@ export type Stats = {
   clause_counts?: Record<string, number>
   weasel_may_per_1k_words?: number
   archived_snapshot?: string | null
+  sandbox?: "otari_code_execution" | "backend"
+  score?: {
+    value: number
+    formula: string
+    factors: { name: string; value: string | number; rule: string; detail?: string; point: number | string }[]
+  }
   diff_vs_archive?: {
     similarity: number
     added_sentences: number
     removed_sentences: number
+    kept_share?: number
     new_risky_sentences: string[]
   } | null
   error?: string
@@ -97,6 +104,7 @@ export type ResultEvent = {
   label: string
   headline: string
   warning_label: boolean
+  score_by?: "code" | "judge_model"
   verdict_md: string
   tips?: string[]
   judge?: Judge

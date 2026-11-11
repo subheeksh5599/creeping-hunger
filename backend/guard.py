@@ -15,18 +15,19 @@ import json
 import os
 import re
 
-from otari import Otari, OtariError, cost_of, message_text
+from otari import Otari, cost_of, message_text
 
 GUARD_MODEL = os.getenv("GUARD_MODEL", "openai/gpt-oss-safeguard-120b")
 DOC_START, DOC_END = "<<<UNTRUSTED_DOCUMENT", "UNTRUSTED_DOCUMENT>>>"
 
 PATTERNS = [
-    r"ignore (all |any )?(the )?(previous|prior|above|earlier) (instructions|prompts|rules)",
+    r"ignore (all |any )?(of )?(the )?(previous|prior|above|earlier)\b",
     r"disregard (all |any )?(the )?(previous|prior|above|system)",
     r"\byou are now\b",
     r"\b(new|updated) (system )?instructions?\s*:",
     r"(ai|llm|language model|assistant|chatbot|reviewer)s?\b[^.]{0,60}\b(must|should|are instructed to|are required to)\b",
     r"(give|assign|rate|score)[^.]{0,40}\b(creep|privacy)[^.]{0,20}score[^.]{0,20}\b(of )?(1|one|zero|0)\b",
+    r"\b(score|rate) (this|it|us|the product)( as| a| an)? (1|one|zero|0)\b",
     r"(reveal|print|output) (your|the) (system prompt|instructions|api key)",
     r"<\|?(system|im_start)\|?>",
     r"do not (mention|tell|reveal)[^.]{0,60}(user|reader)",
@@ -50,7 +51,7 @@ def heuristic(text: str) -> tuple[float, list[str]]:
     for p in PATTERNS:
         m = re.search(p, low)
         if m:
-            hits.append(text[max(0, m.start() - 40): m.end() + 40].strip())
+            hits.append(text[max(0, m.start() - 40): m.end() + 40].replace(DOC_START, "").replace(DOC_END, "").strip())
     return min(1.0, 0.45 * len(hits)), hits
 
 
@@ -81,7 +82,7 @@ async def validate(text: str, client: Otari | None = None) -> dict:
         m = re.search(r"\{.*\}", raw, re.S)
         if m:
             model_verdict = json.loads(m.group(0))
-    except (OtariError, ValueError) as e:  # model unavailable -> heuristics only
+    except Exception as e:  # noqa: BLE001  (model unreachable or unreadable -> heuristics only)
         model_verdict = {"error": str(e)[:200]}
     finally:
         if own:
@@ -90,8 +91,10 @@ async def validate(text: str, client: Otari | None = None) -> dict:
     flagged = (mv and int(mv.get("violation", 0)) == 1 and float(mv.get("confidence", 1)) >= 0.5) or h_score >= 0.9
     score = max(h_score, float(mv.get("confidence", 0)) if mv and mv.get("violation") else 0.0)
     explanation = (mv or {}).get("evidence") or (hits[0] if hits else None)
+    layers = [name for name, hit in (("regex", h_score >= 0.45), ("model", bool(mv and int(mv.get("violation", 0)) == 1))) if hit]
     return {
         "valid": not flagged,
+        "reason_code": "prompt_injection:" + "+".join(layers) if flagged else None,
         "score": round(score, 3),
         "explanation": explanation,
         "heuristic_hits": hits[:5],

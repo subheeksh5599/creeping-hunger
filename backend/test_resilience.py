@@ -63,6 +63,7 @@ class ResearchDegradedTest(unittest.TestCase):
             ({"data_collected": ["email"], "red_flags": []}, {}, {}),
         ])
         review._research = AsyncMock(side_effect=research_error)
+        review._attach_facts = AsyncMock()
         review._compute = AsyncMock(return_value=({"words": 10}, 0.0))
         review._archived_policy = AsyncMock(return_value=("", None))
 

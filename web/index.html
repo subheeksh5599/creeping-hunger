@@ -26,5 +26,5 @@
     install_id: id, force_fallback: document.getElementById("fallback").checked,
     root: document.getElementById("app"), button: document.getElementById("go") });
   const replayId = new URLSearchParams(location.search).get("review");
-  if (replayId) fetch(`${API}/api/reviews/${replayId}`).then(r => r.json()).then(d => CH.replay(d.events, document.getElementById("app")));
+  if (replayId) fetch(`${API}/api/reviews/${replayId}`).then(r => r.json()).then(d => CH.replay(d.events, document.getElementById("app"), { backend: API, install_id: id }));
 </script></body></html>

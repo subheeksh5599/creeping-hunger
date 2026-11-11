@@ -26,3 +26,9 @@ button.link{background:none;color:var(--acc);padding:0;font-size:12px;text-align
 .tips{background:#1f2a24}.tips ul{margin:0;padding-left:18px}.tips li{margin:4px 0}
 .bar{height:8px;background:#2f2b45;border-radius:99px;overflow:hidden;margin:4px 0 6px}.bar div{height:100%;background:#3ddc97}.bar div.hot{background:#ff4d6d}
 .stale{color:#fbbf24}
+.formula{margin:8px 0;padding:8px;border-radius:8px;background:rgba(127,127,127,.08)}
+.formula table{width:100%;border-collapse:collapse;font-size:12px}.formula td,.formula th{padding:3px 4px;text-align:left;border-bottom:1px solid rgba(127,127,127,.2);vertical-align:top}
+.formula tr.hit td:last-child{font-weight:700;color:#f87171}
+.permodel{margin:6px 0 0;padding-left:18px}.src{opacity:.75}.src a,.onpage{color:inherit;text-decoration:underline}
+textarea#ch-paste{background:#2a2640;color:var(--fg);border:1px solid #3b3657;width:100%;box-sizing:border-box;margin:6px 0;font:inherit;border-radius:6px;padding:6px}
+.otari-ids code,.card code{word-break:break-all}

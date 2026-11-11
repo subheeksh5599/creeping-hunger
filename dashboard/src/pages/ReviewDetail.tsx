@@ -64,6 +64,17 @@ export function ReviewDetail({ id }: { id: string }) {
           <CardContent className="flex flex-col gap-4">
             <CreepMeter score={result?.score ?? null} />
             {result?.headline && <p className="text-lg font-medium">{result.headline}</p>}
+            {stats?.score && result?.score_by === "code" ? (
+              <div className="text-sm">
+                <p className="text-muted-foreground">Score computed by code {stats.sandbox === "backend" ? "on the backend (Otari's sandbox failed)" : "in Otari's sandbox"}. The judge model wrote the words, not the number.</p>
+                <table className="mt-2 w-full text-left">
+                  <tbody>{stats.score.factors.map((f) => (
+                    <tr key={f.name} className="border-b"><td className="py-1">{f.name}</td><td>{String(f.value)}</td><td className="text-muted-foreground">{f.rule}</td><td className="text-right font-medium">{f.point === 1 ? "+1" : String(f.point || 0)}</td></tr>
+                  ))}</tbody>
+                </table>
+                <p className="mt-1 text-xs text-muted-foreground">{stats.score.formula}.</p>
+              </div>
+            ) : result && <p className="text-xs text-muted-foreground">This older review's score was picked by the judge model.</p>}
             <div className="flex flex-wrap gap-2">
               {result?.warning_label && <Badge variant="destructive">*Privacy Not Included</Badge>}
               {result?.blocked && <Badge variant="destructive">Prompt injection blocked</Badge>}
