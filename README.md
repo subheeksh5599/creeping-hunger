@@ -14,12 +14,12 @@
 
 </div>
 
-You open a product page in Firefox and click **Review this page** in the sidebar. About a minute later you get a 1 to 5 creep score, a short verdict in the old *Privacy Not Included* voice, the policy sentences behind each red flag, the company's breach history, and three things you can do to protect yourself. Every step runs on open-weight models through [Otari](https://github.com/mozilla-ai/otari), Mozilla.ai's model gateway, and every step shows which model answered and what it cost.
+You open a product page in Firefox and click **Review this page** in the sidebar. About a minute later you see a creepiness percentage (from a 1 to 5 score) and a short verdict in the old *Privacy Not Included* voice. One click on **Details** shows the proof: how the score was set, the policy sentences behind each red flag, the company's breach history and the policy's changes, and every Otari call with its cost. Every step runs on open-weight models through [Otari](https://github.com/mozilla-ai/otari), Mozilla.ai's model gateway, and every step shows which model answered and what it cost.
 
 ```
 product page  →  find the privacy policy  →  block prompt injection  →  extract what they collect
               →  breaches, ToS;DR grade, old PNI review (MCP)  →  readability and policy diff (sandbox)
-              →  verdict from a routed judge with a fallback  →  creep score, quotes, tips
+              →  verdict from a routed judge with a fallback  →  creep score, quotes, proof
 ```
 
 > Not a Mozilla review. Not legal advice. Quotes marked "found in the policy" are word for word from it, and the numbers, the score included, come from code. The words come from models and can be wrong.
@@ -124,7 +124,7 @@ The backend streams eight steps to the sidebar as server-sent events. Each step 
 5. **Extract.** Qwen3 30B returns JSON: data collected, sensitive data, selling, ad sharing, law enforcement, retention, AI training, opt-outs, and red flags with a quote each. The backend marks each quote "found in the policy" or "paraphrase, not found verbatim". A verified quote gets a **Show it on the page** link: the sidebar highlights it in the open tab, or opens the policy at that sentence with a `#:~:text=` fragment and highlights it there.
 6. **Research.** gpt-oss-120b runs in Otari's managed tool loop with our MCP server (`hibp_breaches`, `tosdr`, `pni_archive`) and Otari web search. The Track record rows (old PNI warning, ToS;DR grade, breaches) come from the tools' own output with a source link each, and say whether the tool ran in Otari's loop or, when the loop skipped it, in the backend.
 7. **Compute.** Otari `/code/execute` runs a Python script on the policy: reading time, Flesch-Kincaid grade, counts of "sell", "share", "third party" and similar terms, a sentence diff against the closest Wayback copy (share of old sentences kept, added, removed), and the **score**. The score is 1 plus one point for each rule met, capped at 5: reading grade 13 or higher, 25 or more "may", 2 or more sensitive categories, deletion over 30 days or indefinite, an old PNI warning label, 1 or more breaches on record. A prompt injection sets it to 5. If the sandbox fails, the backend runs the same script and says so.
-8. **Judge.** The `creeping-hunger-judge` routing policy streams the verdict and "Tips to protect yourself". It is told the score and writes words to fit; the backend overwrites any number it writes with the computed one. With **force judge fallback** on, the first call goes to a model that does not exist, and the sidebar lists both calls: call 1 failed with its status, call 2 answered.
+8. **Judge.** The `creeping-hunger-judge` routing policy streams the verdict. It is told the score and writes words to fit; the backend overwrites any number it writes with the computed one. With **force judge fallback** on, the first call goes to a model that does not exist, and the sidebar lists both calls: call 1 failed with its status, call 2 answered.
 
 Each review is one Otari session (`Otari-Conversation-Id`), and each request carries `user: ch-install:<random install id>`. Before and after a review the backend reads that end user's spend from Otari, so the sidebar shows what Otari actually billed, not only the model costs.
 
