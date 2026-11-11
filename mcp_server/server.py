@@ -3,7 +3,7 @@
 Tools
 - hibp_breaches(domain): public breach history from Have I Been Pwned (no key needed)
 - tosdr(domain_or_name): Terms of Service; Didn't Read grade + notable points
-- pni_archive(brand, product): Mozilla's sunset *Privacy Not Included* review, via the Wayback Machine
+- pni_archive(brand, product): Mozilla's archived *Privacy Not Included* review, via the Wayback Machine
 
 Run:  python mcp_server/server.py            (streamable HTTP on :$MCP_PORT or $PORT, default 8765, at /mcp; GET /healthz)
 """
@@ -155,7 +155,7 @@ def tosdr(domain_or_name: str) -> dict:
 
 @mcp.tool
 def pni_archive(brand: str, product: str = "") -> dict:
-    """Mozilla's archived *Privacy Not Included* review (sunset Aug 2026) for a brand/product, from the Wayback Machine."""
+    """Mozilla's archived *Privacy Not Included* guide review for a brand/product, from the Wayback Machine. It reflects the policy when it was published."""
     return pni_archive_impl(brand, product)
 
 

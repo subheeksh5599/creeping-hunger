@@ -52,6 +52,8 @@ export type Research = {
   pni_found?: boolean
   pni_warning_label?: boolean
   pni_people_voted?: string
+  pni_review_date?: string
+  pni_stale?: boolean | null
   pni_summary?: string
 }
 

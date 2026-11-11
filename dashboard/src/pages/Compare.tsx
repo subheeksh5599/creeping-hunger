@@ -27,7 +27,7 @@ const ROWS: [string, (s: Side) => ReactNode][] = [
   ["Red flags", (s) => s.result.extraction.red_flags?.length ?? 0],
   ["Breaches on record", (s) => s.result.research.breaches?.length ?? 0],
   ["ToS;DR grade", (s) => s.result.research.tosdr_grade ?? "n/a"],
-  ["Old Mozilla PNI review", (s) => (s.result.research.pni_found ? (s.result.research.pni_warning_label ? "had the warning label" : "reviewed") : "none archived")],
+  ["Old Mozilla PNI review", (s) => (s.result.research.pni_found ? `${s.result.research.pni_warning_label ? "had the warning label" : "reviewed"}${s.result.research.pni_stale ? " (stale)" : ""}` : "none archived")],
   ["Minutes to read the policy", (s) => s.result.stats.reading_minutes ?? "n/a"],
   ["Reading grade level", (s) => s.result.stats.fk_grade ?? "n/a"],
   ['"may" per 1,000 words', (s) => s.result.stats.weasel_may_per_1k_words ?? "n/a"],

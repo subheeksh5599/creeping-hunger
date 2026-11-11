@@ -143,8 +143,9 @@ export function ReviewDetail({ id }: { id: string }) {
           <CardContent className="flex flex-col gap-2 text-sm">
             <p>Breaches on Have I Been Pwned: {rs?.breaches?.length ? rs.breaches.map((b) => `${b.name} (${b.date})`).join(", ") : "none on record"}</p>
             <p>ToS;DR grade: <Badge variant="outline">{rs?.tosdr_grade ?? "n/a"}</Badge></p>
-            <p>Archived Mozilla PNI review: {rs?.pni_found ? `${rs.pni_people_voted ?? ""}${rs.pni_warning_label ? ", carried the warning label" : ""}` : "none archived"}</p>
+            <p>Archived Mozilla PNI review: {rs?.pni_found ? `${rs.pni_people_voted ?? ""}${rs.pni_review_date ? `, reviewed ${rs.pni_review_date}` : ""}${rs.pni_warning_label ? ", carried the warning label" : ""}` : "none archived"}</p>
             {rs?.pni_summary && <p className="text-muted-foreground">{rs.pni_summary.slice(0, 400)}</p>}
+            {rs?.pni_stale && <p className="text-amber-600">Stale: that archived review is over a year old or undated, so the policy may have changed since.</p>}
           </CardContent>
         </Card>
       </div>

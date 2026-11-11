@@ -96,7 +96,8 @@ const CH = (() => {
       ${r ? `<section class="card"><h3>Track record <span class="chip">MCP</span></h3>
         <p class="small"><b>Breaches:</b> ${(rs.breaches || []).length ? rs.breaches.map((b) => esc(`${b.name} (${b.date})`)).join(", ") : "none on record"}</p>
         <p class="small"><b>ToS;DR grade:</b> ${esc(rs.tosdr_grade || "n/a")}</p>
-        <p class="small"><b>Old Mozilla PNI review:</b> ${rs.pni_found ? `${esc(rs.pni_people_voted || "")}${rs.pni_warning_label ? " · had the warning label" : ""}` : "none archived"}</p></section>` : ""}
+        <p class="small"><b>Old Mozilla PNI review:</b> ${rs.pni_found ? `${esc(rs.pni_people_voted || "")}${rs.pni_review_date ? ` · reviewed ${esc(rs.pni_review_date)}` : ""}${rs.pni_warning_label ? " · had the warning label" : ""}` : "none archived"}</p>
+        ${rs.pni_stale ? `<p class="small stale">That archived review is over a year old or undated. Mozilla says archived reviews reflect the policy when they were written, so trust today's policy above.</p>` : ""}</section>` : ""}
       <p class="small disclaimer">Not legal advice. Not a current Mozilla *Privacy Not Included review. Archived PNI text can be out of date, and the score can be wrong.</p>
       ${(st.notes || []).length ? `<section class="card notes"><h3>Setup notes</h3><ul class="small">${st.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul></section>` : ""}`;
   }

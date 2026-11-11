@@ -51,9 +51,11 @@ export function Landing() {
         <Badge variant="secondary" className="w-fit">Built for the Mozilla.ai Otari hackathon</Badge>
         <h1 className="text-4xl font-semibold tracking-tight">A creep score for the product page you are on.</h1>
         <p className="text-lg text-muted-foreground">
-          Mozilla closed its *Privacy Not Included guide on 11 August 2026. For nine years it told shoppers which
-          smart doorbells, fitness trackers and apps collected too much. Creeping Hunger is a Firefox sidebar that
-          writes that kind of review for any product page, using open-weight models through Mozilla.ai's Otari gateway.
+          From 2017 Mozilla's *Privacy Not Included guide told shoppers which smart doorbells, fitness trackers and
+          apps collected too much. In August 2026 the guide format retired and the work moved to hand-tested reviews
+          of a few popular products in Mozilla's Nothing Personal magazine. Creeping Hunger brings that kind of review
+          to any product page, live, against today's policy, and flags when an archived PNI review is stale. It runs
+          open-weight models through Mozilla.ai's Otari gateway.
         </p>
         <div className="flex flex-wrap gap-2">
           <Button asChild><a href="#install">Install the sidebar</a></Button>

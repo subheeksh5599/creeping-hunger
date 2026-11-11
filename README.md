@@ -2,12 +2,12 @@
 
 # CREEPING HUNGER
 
-### Mozilla's *Privacy Not Included* closed in August 2026. This Firefox sidebar writes that review for the product page you are on.
+### Mozilla's *Privacy Not Included* now hand-tests a few popular products. This Firefox sidebar writes a PNI-style review for any product page you are on, against today's policy.
 
 [![Status](https://img.shields.io/badge/status-live%20on%20Render-16a34a)](https://creeping-hunger.onrender.com)
 [![Models](https://img.shields.io/badge/models-5%20open--weight-1f6feb)](#models)
 [![Otari](https://img.shields.io/badge/Otari%20features-8%20of%208-6f42c1)](#how-otari-is-load-bearing)
-[![Tests](https://img.shields.io/badge/backend%20tests-10%20passing-16a34a)](#tests)
+[![Tests](https://img.shields.io/badge/backend%20tests-14%20passing-16a34a)](#tests)
 [![License](https://img.shields.io/badge/license-MPL--2.0-blue)](LICENSE)
 
 [![Live](https://img.shields.io/badge/Live-creeping--hunger.onrender.com-e2a336?labelColor=141415)](https://creeping-hunger.onrender.com) [![Try](https://img.shields.io/badge/Try%20it-web%20reviewer-141415?labelColor=141415)](https://creeping-hunger.onrender.com/try) [![Dashboard](https://img.shields.io/badge/Dashboard-past%20reviews-141415?labelColor=141415)](https://creeping-hunger.onrender.com/#/dashboard) [![Submission](https://img.shields.io/badge/Submission-hackathon%20details-141415?labelColor=141415)](#submission) [![Honesty](https://img.shields.io/badge/Honesty-table-141415?labelColor=141415)](#whats-real-vs-pending)
@@ -86,7 +86,7 @@ Not a Mozilla product, and not a current *Privacy Not Included* review. It reuse
 
 ## The problem
 
-From 2017 Mozilla Foundation's *Privacy Not Included* reviewed connected products and apps, gave each a "creep" rating, and put a warning label on the worst. Mozilla closed it on 11 August 2026 ([sunset note](https://www.mozillafoundation.org/en/nothing-personal/privacy-not-included-sunset/)). The archived reviews stay on the Wayback Machine and are not updated.
+From 2017 Mozilla Foundation's *Privacy Not Included* reviewed connected products and apps, gave each a "creep" rating, and put a warning label on the worst. On 11 August 2026 the guide format retired and the work moved to Product Reviews in Mozilla's magazine *Nothing Personal*, where its experts spend hours hand-testing the most popular consumer tech (["Privacy Not Included Has Moved"](https://www.mozillafoundation.org/en/nothing-personal/privacy-not-included-sunset/)). Mozilla says archived PNI reviews reflect the policy when they were published, that companies update policies typically at least once a year, and that the archive should not be relied on as current. For policy history it points to Harvard's Transparency Hub.
 
 That leaves a shopper with the policy itself. Here is what our pipeline read on the Fitbit Charge 6 page on 11 November 2026 (review `ch-7fff6a158060`):
 
@@ -103,7 +103,7 @@ A health tracker's buyer cannot get that from the product page, and nobody now p
 
 | Project | What it does | Where Creeping Hunger differs |
 |---|---|---|
-| *Privacy Not Included*, Mozilla Foundation, 2017 to 2026 | Human researchers reviewed a curated list of products with a public rubric. Closed August 2026. | We review any product page, on demand, in about a minute. We quote the archived PNI review when one exists. Our reviews come from models and can be wrong; PNI's came from people. |
+| *Privacy Not Included*, Mozilla Foundation, since 2017 | Human researchers reviewed a curated list of products with a public rubric. Since August 2026 the work continues as hand-tested Product Reviews of a few popular items in *Nothing Personal*. | We review any product page, on demand, in about a minute, against the policy live today. We quote the archived PNI review when one exists and flag it as stale when it is over a year old. Our reviews come from models and can be wrong; PNI's came from people. |
 | [ToS;DR](https://tosdr.org) | Volunteers annotate policy quotes, curators approve them, a public algorithm gives an A to E grade. Browser extensions show existing grades. | We use ToS;DR as one input (MCP tool `tosdr`), and still review products ToS;DR has never graded. |
 | [Polisis / PriBot](https://pribot.org/), USENIX Security 2018 | Classifies policy segments and answers questions about them. Reported 88.4% accuracy on OPP-115 labels. Extensions went stale. | We give a shopper's verdict with breach history and the policy's change history, and we have published no accuracy evaluation. Polisis measured its accuracy; we have not. |
 | [Trust Layer](https://chromewebstore.google.com/detail/trust-layer/pdaeghgikdefhjmpfnknponehopmeenc) | Chrome extension, one commercial model, 1 to 10 score and short bullets. | Open-weight models split into extractor, researcher, guard and judge, plus breach, ToS;DR and archive checks. |
@@ -288,7 +288,7 @@ These need an organization owner or admin. The API key cannot do them.
 ## Tests
 
 ```bash
-cd backend && python -m unittest test_resilience test_extras    # 10 tests
+cd backend && python -m unittest test_resilience test_extras    # 14 tests
 cd dashboard && npx tsc -b && npx eslint src
 ```
 

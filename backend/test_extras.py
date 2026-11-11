@@ -6,7 +6,7 @@ import time
 import unittest
 from unittest.mock import AsyncMock, patch
 
-from pipeline import Review, foreign_locale, looks_like_policy, mostly_latin, parse_verdict, salvage_json
+from pipeline import Review, foreign_locale, looks_like_policy, mostly_latin, parse_verdict, pni_stale, salvage_json
 
 VERDICT = """SCORE: 4
 LABEL: Very creepy
@@ -95,6 +95,13 @@ class MalformedJsonTest(unittest.TestCase):
         self.assertTrue(data["partial"])
         self.assertEqual(data["sells_data"], "no")
         self.assertTrue(any("malformed JSON" in n for n in review.o.notes))
+
+
+class PniStaleTest(unittest.TestCase):
+    def test_old_or_undated_archived_review_is_stale(self):
+        self.assertTrue(pni_stale({"pni_found": True, "pni_review_date": "Sept. 21, 2023"}))
+        self.assertTrue(pni_stale({"pni_found": True}))
+        self.assertIsNone(pni_stale({"pni_found": False}))
 
 
 class CacheTest(unittest.TestCase):

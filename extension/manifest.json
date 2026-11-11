@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Creeping Hunger",
   "version": "0.1.0",
-  "description": "Privacy Not Included, revived: a creep score for the product page you're on, from open-weight models via Mozilla.ai's Otari.",
+  "description": "The Privacy Not Included format, live on any product page: a creep score for the product page you're on, from open-weight models via Mozilla.ai's Otari.",
   "icons": {
     "48": "icon.svg",
     "96": "icon.svg"
