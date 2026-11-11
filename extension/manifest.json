@@ -3,16 +3,44 @@
   "name": "Creeping Hunger",
   "version": "0.1.0",
   "description": "Privacy Not Included, revived: a creep score for the product page you're on, from open-weight models via Mozilla.ai's Otari.",
-  "icons": {"48": "icon.svg", "96": "icon.svg"},
-  "permissions": ["activeTab", "tabs", "scripting", "storage"],
-  "host_permissions": ["<all_urls>"],
+  "icons": {
+    "48": "icon.svg",
+    "96": "icon.svg"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "sidebar_action": {
     "default_title": "Creeping Hunger",
     "default_panel": "sidebar.html",
     "default_icon": "icon.svg",
     "open_at_install": true
   },
-  "action": {"default_title": "Open Creeping Hunger", "default_icon": "icon.svg"},
-  "background": {"scripts": ["background.js"]},
-  "browser_specific_settings": {"gecko": {"id": "creeping-hunger@subheeksh5599", "strict_min_version": "128.0"}}
+  "action": {
+    "default_title": "Open Creeping Hunger",
+    "default_icon": "icon.svg"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "creeping-hunger@subheeksh5599",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "websiteContent",
+          "browsingActivity"
+        ]
+      }
+    }
+  }
 }

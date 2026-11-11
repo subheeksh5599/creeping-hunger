@@ -112,6 +112,17 @@ These need an organization owner or admin in the Otari dashboard. The API key ca
 
 **Guardrail.** No dashboard step is needed. The extractor call names our service in `guardrails[].url`, which works once `PUBLIC_BASE_URL` is public. Do not mandate it for the whole organization: the judge's input quotes the injection on purpose, and a mandate would block the judge too. The hosted deployment has no guardrail service of its own (`GET /tool-settings/guardrails/profiles` answers `available: false`).
 
+## Screenshots
+
+| Sidebar on Fitbit Charge 6 | Hostile page blocked | Review detail in the dashboard |
+| --- | --- | --- |
+| ![](docs/screenshots/sidebar-fitbit.png) | ![](docs/screenshots/sidebar-hostile-blocked.png) | ![](docs/screenshots/review-fitbit.png) |
+
+![Landing page](docs/screenshots/landing.png)
+![Dashboard](docs/screenshots/dashboard.png)
+
+`/try?review=<review id>` replays a saved review in the sidebar UI. Use it to show a finished review while a live one runs.
+
 ## Repo layout
 
 - `backend/` is the FastAPI app: `pipeline.py` runs the eight steps, `otari.py` is the Otari client, `guard.py` is the guardrail, `store.py` saves reviews to `data/reviews/`.
