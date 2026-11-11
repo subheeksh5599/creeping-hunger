@@ -273,7 +273,7 @@ class Review:
                 break
         if not policy_text:
             policy_text, policy_url, policy_via = text, self.url, "product_page"
-            yield self.step("policy", "done", "No policy found — reviewing the page itself", detail="fallback")
+            yield self.step("policy", "done", "No policy found, so reviewing the page itself", detail="fallback")
         else:
             yield self.step("policy", "done", "Found the privacy policy", url=policy_url,
                             detail=f"{len(policy_text):,} chars via {policy_via}", otari=search_meta)
@@ -300,7 +300,7 @@ class Review:
                 injected_into_page = injected_into_page or pol_check
         blocked = injected_into_page is not None
         yield self.step("guard", "error" if blocked else "done",
-                        "Prompt injection detected — blocked" if blocked else "No prompt injection found",
+                        "Prompt injection detected and blocked" if blocked else "No prompt injection found",
                         model=guard.GUARD_MODEL, cost_usd=gcost, guard_mode=gmode,
                         evidence=(injected_into_page or {}).get("explanation"),
                         score=(injected_into_page or {}).get("score"))
@@ -563,7 +563,7 @@ class Review:
                 if e.code in ("budget_exceeded", "user_blocked", "insufficient_funds"):
                     raise
                 last_err = e
-                yield self.step("judge", "running", f"{model} failed ({e.status}) — falling back",
+                yield self.step("judge", "running", f"{model} failed ({e.status}), falling back",
                                 model=model, otari=e.meta)
         raise last_err or RuntimeError("judge failed")
 
