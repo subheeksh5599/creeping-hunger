@@ -201,8 +201,7 @@ class Review:
             except OtariError as e:
                 if e.code == "web_access_disabled":
                     self.web_access = False
-                else:
-                    raise
+                self.o.notes.append(f"Otari /search failed ({e.detail}); used policy links on the page and common paths.")
         scheme_host = f"https://{brand_domain}" if "." in brand_domain and brand_domain != host else \
             f"{urlparse(self.url).scheme}://{urlparse(self.url).netloc}"
         for p in ("/privacy", "/privacy-policy", "/privacy-notice", "/legal/privacy", "/legal/privacy-policy",
