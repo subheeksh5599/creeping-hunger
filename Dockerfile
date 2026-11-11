@@ -13,6 +13,7 @@ COPY backend/ backend/
 COPY mcp_server/ mcp_server/
 COPY extension/ extension/
 COPY hostile/ hostile/
+COPY samples/ samples/
 COPY web/ web/
 COPY --from=dashboard /app/dashboard/dist dashboard/dist
 ENV PORT=8787
