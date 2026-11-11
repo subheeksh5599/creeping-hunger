@@ -2,10 +2,23 @@
 from __future__ import annotations
 
 import json
+import shutil
 import time
 from pathlib import Path
 
 DIR = Path(__file__).resolve().parent.parent / "data" / "reviews"
+SEED = Path(__file__).resolve().parent.parent / "samples" / "reviews"
+
+
+def seed() -> None:
+    """Copies the committed demo reviews in, so a fresh deploy with no disk still has history."""
+    DIR.mkdir(parents=True, exist_ok=True)
+    for p in SEED.glob("*.json"):
+        if not (DIR / p.name).exists():
+            shutil.copy(p, DIR / p.name)
+
+
+seed()
 
 
 CACHE_SECONDS = 24 * 3600

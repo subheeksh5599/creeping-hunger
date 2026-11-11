@@ -20,6 +20,16 @@ const STEPS = [
   ["Judge", "Llama 3.3 70B writes the verdict in the old PNI voice. If it fails, Mistral Small takes over, and the sidebar shows the fallback."],
 ] as const
 
+const OTARI = [
+  ["Open-weight models", "Five models from four labs: Qwen3 30B, gpt-oss-120b, gpt-oss-safeguard-120b, Llama 3.3 70B, Mistral Small 3.2."],
+  ["Routing and fallback", "The judge runs through an Otari routing policy. The sidebar shows which model answered and whether a fallback ran."],
+  ["MCP", "Our MCP server gives the researcher three tools: Have I Been Pwned breaches, the ToS;DR grade, and the archived PNI review."],
+  ["Web search and fetch", "Otari /search finds the privacy policy and /fetch reads it."],
+  ["Code execution", "Otari's sandbox computes reading time, grade level, clause counts and a diff against a Wayback copy."],
+  ["Guardrail", "A prompt-injection check runs before the extractor sees the page. A flagged page is blocked and scored 5."],
+  ["Per-user budgets", "Each browser install is its own Otari end user with its own spend cap. The sidebar shows what is left."],
+] as const
+
 const INSTALL = [
   "Clone the repo and start the backend (two commands in the README).",
   "Open about:debugging#/runtime/this-firefox in Firefox.",
@@ -34,9 +44,10 @@ export function Landing() {
   }, [])
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-10 p-6">
+    <div className="mx-auto flex max-w-5xl flex-col gap-12 p-6">
       <Nav />
-      <section className="flex flex-col gap-4">
+      <section className="grid items-center gap-8 md:grid-cols-[1fr_320px]">
+       <div className="flex flex-col gap-4">
         <Badge variant="secondary" className="w-fit">Built for the Mozilla.ai Otari hackathon</Badge>
         <h1 className="text-4xl font-semibold tracking-tight">A creep score for the product page you are on.</h1>
         <p className="text-lg text-muted-foreground">
@@ -49,6 +60,8 @@ export function Landing() {
           <Button variant="outline" asChild><a href="#/dashboard">Open the dashboard</a></Button>
           <Button variant="ghost" asChild><a href={REPO}>Source code</a></Button>
         </div>
+       </div>
+        <img src="/sidebar-verdict.png" alt="The Creeping Hunger sidebar giving the Fitbit Charge 6 a 5 out of 5 creep score" className="w-full rounded-2xl shadow-xl ring-1 ring-foreground/10" />
       </section>
 
       {sample && (
@@ -76,8 +89,20 @@ export function Landing() {
         </div>
         <p className="text-muted-foreground">
           Every step reports the model Otari routed to, whether a fallback ran, and what the call cost. Each browser
-          install gets an anonymous id that Otari uses as the end user, so a daily budget caps what one person can spend.
+          install gets an anonymous id that Otari uses as the end user, so a budget caps what one person can spend. A page reviewed in the last 24 hours loads from the saved review in under a second.
         </p>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-2xl font-semibold">Built on Otari</h2>
+        <p className="text-muted-foreground">Every model call, search, fetch, sandbox run and budget check goes through Mozilla.ai's Otari gateway.</p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {OTARI.map(([title, body]) => (
+            <Card key={title} size="sm">
+              <CardHeader><CardTitle>{title}</CardTitle><CardDescription>{body}</CardDescription></CardHeader>
+            </Card>
+          ))}
+        </div>
       </section>
 
       <Separator />
