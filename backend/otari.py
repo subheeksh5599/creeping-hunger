@@ -28,7 +28,8 @@ class OtariError(Exception):
     @property
     def friendly(self) -> str:
         if self.code == "budget_exceeded":
-            return "You've used up this browser's free review budget. It resets at the start of the next budget period."
+            return ("This browser's free review budget is used up. Otari counts search, fetch and tool calls, and holds an "
+                    "estimate before each request, so a review can cost more than the model costs shown here.")
         if self.code == "user_blocked":
             return "This install has been blocked from making reviews."
         if self.code == "guardrail_violation":
