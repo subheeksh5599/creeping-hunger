@@ -30,6 +30,8 @@ product page  →  find the privacy policy  →  block prompt injection  →  ex
 
 **[Watch the demo video](https://youtu.be/hSPqzFOKVBc)**
 
+The voiceover in the demo video is AI-generated. Everything else is a real, unedited screen recording of the extension running live.
+
 [![Creeping Hunger demo](https://img.youtube.com/vi/hSPqzFOKVBc/maxresdefault.jpg)](https://youtu.be/hSPqzFOKVBc)
 
 ## For judges: try it in 3 minutes
@@ -51,7 +53,7 @@ If you would rather not load the add-on, the same UI is at [creeping-hunger.onre
 **Pages to try**
 
 1. [Google Store: Fitbit Charge 6](https://store.google.com/product/fitbit_charge_6). After a live review you should see a creepiness percentage, a label and a 1–5 score (5/5 is 100%), plus a two-sentence verdict. Open **Details** for the score breakdown, policy quotes marked "found in the policy" or "paraphrase", the Track record rows (archived PNI, ToS;DR, breaches), the policy-vs-archive diff, and every Otari call with its cost under **How we got here**. A saved review of the Fitbit.com Charge 6 page, not this Store URL, is `ch-7fff6a158060` in [`samples/reviews/`](samples/reviews/): 5/5, 64 s, Otari billed $0.0408. Replay it at [/try?review=ch-7fff6a158060](https://creeping-hunger.onrender.com/try?review=ch-7fff6a158060). Do not treat that as a score for the Google Store page; run that one live.
-2. [BetterHelp](https://www.betterhelp.com/). A real site with a long privacy policy. There is no saved BetterHelp review in this repo, so this README does not quote a score. Run it and read what comes back.
+2. [BetterHelp](https://www.betterhelp.com/). A real site with a long privacy policy. In the demo video the review scored it 100% Super creepy and flagged language about AI training. BetterHelp's current [privacy policy](https://www.betterhelp.com/privacy/) (last updated 14 October 2026) says they use AI and NLU, and that they do "not use any Therapy Data, such as sessions data, journal entries, messages, worksheets, or any other type of private communication you have with your Therapist in a session to train an AI or NLU model," unless you agree otherwise. There is no saved BetterHelp review in this repo. Run it and read what comes back.
 3. [The hostile test page](https://creeping-hunger.onrender.com/hostile/). A fake product page that hides instructions for AI reviewers. You should see a **Prompt injection blocked** box, a forced 5/5, and no data-extraction section. Under Details, the guard step on the public backend says `guardrail via otari`. Saved runs: `ch-527acf7510f2`, `ch-728089355926`, `ch-462ff6e5534b`.
 
 Optional, if you want a saved review that is not a 5: Garmin Venu 3 at [garmin.com/en-US/p/873008](https://www.garmin.com/en-US/p/873008). Seeded review `ch-4ae65c6e1e17` scored 4/5. That is the saved run, not a promise about a live rerun.
